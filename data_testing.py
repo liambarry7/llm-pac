@@ -1,7 +1,9 @@
 import pandas as pd
+from scipy.stats import zscore
+
+import os
 
 # dataset_dir = "D:\\kimia\\Documents\\University\\UEA\\Yr3 Project\\Dataset\\capture24"
-dir = "D:\\kimia\\Documents\\University\\UEA\\Yr3 Project\\Dataset\\P001.csv"
 
 
 def label_annotation_mapping():
@@ -14,8 +16,6 @@ def label_annotation_mapping():
     print(label_df.head())
     print(label_df.columns)
     print(label_df['label:WillettsSpecific2018'].value_counts())
-
-
 
     # drop unneeded label types, keep 'WillettsSpecific2018' - explain why
     label_df = label_df.drop(['label:WillettsMET2018',
@@ -40,13 +40,124 @@ def label_annotation_mapping():
     # print label counts
     print(label_df[['label:WillettsSpecific2018', 'encoded_label']].value_counts())
 
-
     # save as new csv for cross-reference when mapping labels for data
     save_dir = r'D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\annotation-label-encoded.csv'
     label_df.to_csv(save_dir, mode='w', index=False)
 
-def test():
+def preprocess_dir():
+    # function to loop through all raw csvs and preprocess their data
+    data_dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\capture24-csv"
+
+    for f in os.scandir(data_dir):
+        if f.is_file():
+            raw_name = os.path.splitext(f.name)[0] # get file name without file extension (.csv)
+            print("\n" + raw_name)
+            # print("\n" + os.path.join(data_dir, f.name))
+            preprocess_file(os.path.join(data_dir, f.name), raw_name)
+
+def combine_data():
+    # function to loop through cleaned csvs and concat them together to form a master cleaned file w/ all data
+    pass
+
+
+def preprocess_file(file, f_name):
+    # used to preprocess raw data in a given file and save the cleaned data
+    df = pd.read_csv(file)
+    print(df.head())
+    print(f"File: ")
+    print(f"Columns: {df.columns}")
+    print(f"File size (total data points): {df.size}")
+    print(f"df shape: {df.shape}")
+
+    # get label values
+    print(df['annotation'].value_counts())
+
+    # remove missing values and duplicate rows
+    df_na_dup = remove_na_dup(df)
+
+    # map labels onto df
+    df_mapped = map_labels(df_na_dup)
+
+    # remove unwanted labels
+    df_clean = remove_unwanted_labels(df_mapped, [8,9])
+
+    # normalise the dataset (x,y,z)
+    # ------ NEEDS IMPLEMENTING
+
+    # sample dataset
+    df_sampled = sample_dataset(df_clean, 10000)
+
+    # save csv file (P001-S -> S for sampled)
+    dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\cleaned-data"
+    df_sampled.to_csv(f"{dir}\\{f_name}-S.csv", mode='w', index=False)
+
+
+def remove_na_dup(df):
+    # remove any rows with na values and duplicates
+
+    print("\n-- Drop NA Rows --")
+    row_len_before_drop = df.shape[0]
+    print("\n-- Drop NA Rows --")
+    nan_rows = df[df.isna().any(axis=1)]
+    # print(f"nan rows: {nan_rows}")
+    print(f"no of nan rows (rows with no labels): {len(nan_rows)}")
+    df = df.dropna().reset_index(drop=True)
+
+    print("\n-- Drop Duplicate Rows --")
+    df = df.drop_duplicates().reset_index(drop=True)
+
+    row_len_after_drop = df.shape[0]
+    print(f"Rows removed: {row_len_before_drop - row_len_after_drop}")
+
+    return df
+
+def map_labels(df):
+    # --- New label mapping ---
+    print("\n-- Label Mapping --")
+    annotation_label_dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\annotation-label-encoded.csv"
+    label_df = pd.read_csv(annotation_label_dir)
+    print(label_df[['label:WillettsSpecific2018', 'encoded_label']].value_counts())
+
+    # make into dict for mapping
+    label_dict = label_df.set_index('annotation')['encoded_label']
+
+    # map onto main df
+    df['label'] = df['annotation'].map(label_dict)
+
+    print(f"\nannotation + label + counts: \n {df[['annotation', 'label']].value_counts()}")
+    print(f"\nlabels with counts for each annotations: \n{df['annotation'].groupby(df['label']).value_counts()}")
+
+    return df
+
+def remove_unwanted_labels(df, labels):
+    # remove unwanted labels from df
+    print("\n-- Remove Labels --")
+    df = df.drop(df[df['label'].isin(labels)].index)
+    print(f"\nannotation + label + counts: \n {df[['annotation', 'label']].value_counts()}")
+
+    return df
+
+def normalisation(df):
+    # normalise raw data in df
+    pass
+
+def sample_dataset(df, sample_size):
+    # return a sample from the df
+    print(f"\ndf size before sampling: {df.shape}")
+
+    # sample with even balance of classes? - stratified sampling -----
+    random_state = 42
+    # take 10,000 samples from each individual
+    df_sample = df.sample(n=sample_size, replace=False, random_state=random_state)
+
+    print(f"\ndf size after sampling: {df_sample.shape}")
+    print(df_sample.head())
+
+    return df_sample
+
+def test_play():
     print("-- Initial data --")
+    dir = "D:\\kimia\\Documents\\University\\UEA\\Yr3 Project\\Dataset\\P001-T.csv"
 
     # df = pd.read_csv(f"{dataset_dir}\\P001.csv.gz\\P001.csv")
     df = pd.read_csv(dir)
@@ -77,6 +188,8 @@ def test():
     # drop duplicates
     print("\n-- Drop Duplicate Rows --")
     df = df.drop_duplicates().reset_index(drop=True)
+
+    # df = remove_na_dup(df)
 
     print(df.head())
     print(df.columns)
@@ -128,13 +241,19 @@ def test():
     print(f"\nannotation + label + counts: \n {df[['annotation', 'label']].value_counts()}")
     print(f"\nlabels with counts for each matching annotations: \n{df['annotation'].groupby(df['label']).value_counts()}")
 
-
+    # df = map_labels(df)
 
     # --- remove unwanted labels ----
     # remove any unwanted labels (rows)
     unwanted_labels = [8, 9] # vehicle, household chores
     df = df.drop(df[df['label'].isin(unwanted_labels)].index)
     print(f"\nannotation + label + counts: \n {df[['annotation', 'label']].value_counts()}")
+
+    # df = remove_unwanted_labels(df, [8,9])
+
+    # normalised by window (e.g. every x seconds)
+    # -- do this before random sampling
+    # -- with feature extraction??
 
 
     # --- random sample to reduce dataset size ---
@@ -148,11 +267,17 @@ def test():
     print(f"\ndf size after sampling: {df_sample.shape}")
     print(df_sample.head())
 
-    # normalised by window (e.g. every x seconds)
-    # -- do this after random sampling
+    # df = sample_dataset(df)
+
+    # save csv file (P001-T -> T for test)
+    df_sample.to_csv("D:\\kimia\\Documents\\University\\UEA\\Yr3 Project\\Dataset\\P001-T.csv", mode='w', index=False)
+
+def test_harness():
+    pass
 
 
 
 if __name__ == "__main__":
-    test()
+    # test_play()
     # label_annotation_mapping()
+    preprocess_dir()

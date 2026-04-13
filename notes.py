@@ -4,7 +4,6 @@
 
 
     ML models:
-        - Decision Tree (scikit) - drop if random forest is better
         - Random Forest (scikit)
         - kNN (scikit)
         - Gradient Boosting (XGBoost)
