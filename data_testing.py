@@ -57,7 +57,20 @@ def preprocess_dir():
 
 def combine_data():
     # function to loop through cleaned csvs and concat them together to form a master cleaned file w/ all data
-    pass
+    data_dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\cleaned-data"
+    master_df = pd.DataFrame(columns=['time', 'x', 'y', 'z', 'annotation', 'label'])
+    for f in os.scandir(data_dir):
+        if f.is_file():
+            # print(f.path)
+            print(f"File: {f.name}")
+            df = pd.read_csv(f.path)
+            master_df = pd.concat([master_df, df], axis=0, ignore_index=True)
+            print("File combined.\n")
+
+    print(master_df.info)
+
+    # save master df as csv
+    master_df.to_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv", mode='w', index=False)
 
 
 def preprocess_file(file, f_name):
@@ -280,4 +293,12 @@ def test_harness():
 if __name__ == "__main__":
     # test_play()
     # label_annotation_mapping()
-    preprocess_dir()
+    # preprocess_dir()
+    # combine_data()
+
+    df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv")
+    print(df.shape)
+    print(df.columns)
+    print(f"\nannotation + label + counts: \n {df[['label']].value_counts()}")
+
+
