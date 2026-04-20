@@ -4,7 +4,11 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
 
 def test():
-    dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\P001-S.csv"
+    # https://www.geeksforgeeks.org/machine-learning/xgbclassifier/
+
+    # dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\P001-S.csv"
+    dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv"
+
     df = pd.read_csv(dir)
     # df = df.drop(columns=['time', 'annotation'])
     print(df.columns)
@@ -22,6 +26,14 @@ def test():
 
     acc = accuracy_score(y_test, y_pred)
     print(f"Accuracy: {acc}")
+
+"""
+    NOTES
+    - turn x/y into numpy arrays
+    - fine tune ->  
+    - use x for fine tuning https://www.kaggle.com/code/prashant111/a-guide-on-xgboost-hyperparameters-tuning
+    - save each result in a csv file
+"""
 
 if __name__ == "__main__":
     print("Hello World!")

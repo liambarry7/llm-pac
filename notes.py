@@ -13,7 +13,7 @@
         Random Forest
         XGB
         ANN
-        SVM
+        SVM?
 
     Prompt Engineering:
         - Gemma-2b

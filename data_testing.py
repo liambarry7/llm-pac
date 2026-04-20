@@ -300,5 +300,3 @@ if __name__ == "__main__":
     print(df.shape)
     print(df.columns)
     print(f"\nannotation + label + counts: \n {df[['label']].value_counts()}")
-
-
