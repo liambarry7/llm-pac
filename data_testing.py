@@ -162,7 +162,6 @@ def zscore(column):
     col_std = np.std(column)
     return (column - col_m) / col_std
 
-
 def sample_dataset(df, sample_size):
     # return a sample from the df
     print(f"\ndf size before sampling: {df.shape}")
@@ -320,20 +319,25 @@ def test_harness():
     print(f"Columns: {df_norm.columns}")
     print(f"{df_norm.head()}")
 
+    # sample dataset
+    df_sampled = sample_dataset(df_norm, 7500)
 
-    pass
+    print(f"Columns: {df_sampled.columns}")
+    print(f"File size (total data points): {df_sampled.size}")
+    print(f"df shape: {df_sampled.shape}")
+    print(df.head())
 
 
 
 if __name__ == "__main__":
     # test_play()
     # label_annotation_mapping()
-    preprocess_dir()
-    combine_data()
+    # preprocess_dir()
+    # combine_data()
 
     df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv")
     print(df.shape)
     print(df.columns)
     print(f"\nannotation + label + counts: \n {df[['label']].value_counts()}")
 
-    # test_harness()
+    test_harness()

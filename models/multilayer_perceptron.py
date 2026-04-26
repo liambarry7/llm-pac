@@ -1,4 +1,4 @@
-from xgboost import XGBClassifier
+from sklearn.neural_network import MLPClassifier
 import pandas as pd
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
@@ -10,20 +10,21 @@ y = df['label'].to_numpy()
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
 
 def fine_tuning():
-    # create rf model with no params
-    xgb = XGBClassifier()
+    # create new mlp
+    mlp = MLPClassifier(max_iter=1000, random_state=41)
 
     param_grid = [{
-        'max_depth': [3,6,10],
-        'learning_rate': [0.01, 0.05, 0.1],
-        'n_estimators': [100, 500, 1000],
-        'colsample_bytree': [0.3, 0.7]
+        'hidden_layer_sizes': [(64, 32), (32, 32), (75, 50), (48, 16)],
+        'activation': ['identity', 'logistic', 'tanh', 'relu'],  # default = relu
+        'learning_rate': ['constant', 'invscaling', 'adaptive'],  # default = constant
+        'solver': ['sgd', 'adam']  # default = adam
+        # 'alpha': [0.0001, 0.001, 0.005, 0.0005] # default = 0.0001
     }]
 
     # five-fold - use StratifiedKFold to avoid imbalanced class distribution
     ff = StratifiedKFold(n_splits=5, shuffle=True, random_state=41)
 
-    grid_search = GridSearchCV(xgb, param_grid, cv=ff, scoring='accuracy', refit=True, n_jobs=-1, verbose=3)
+    grid_search = GridSearchCV(mlp, param_grid, cv=ff, scoring='accuracy', refit=True, n_jobs=-1, verbose=3)
     # n_jobs = -1 : run on all available cores
     # verbose = 2 : gives update each time fold finishes
 
@@ -42,11 +43,12 @@ def fine_tuning():
     # params = params used, mean_test_score = avg score over 5 folds, std_test_score =
     # results_df = results_df[['params', 'mean_test_score', 'std_test_score', 'rank_test_score']].sort_values(by='rank_test_score')
     results_df = results_df[
-        ['param_max_depth', 'param_learning_rate', 'param_n_estimators', 'param_colsample_bytree', 'mean_test_score',
+        ['param_activation', 'param_hidden_layer_sizes', 'param_learning_rate', 'param_solver', 'mean_test_score',
          'std_test_score', 'rank_test_score']].sort_values(by='rank_test_score')
+
     print(results_df.head())
 
-    results_df.to_csv('xgb_fine_tune_results.csv', index=False)
+    results_df.to_csv('mlp_fine_tune_results.csv', index=False)
 
 def test():
     # https://www.geeksforgeeks.org/machine-learning/xgbclassifier/
@@ -64,13 +66,15 @@ def test():
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
 
-    xgb = XGBClassifier()
-    xgb.fit(x_train, y_train)
+    mlp = MLPClassifier(max_iter=1000, random_state=41)
 
-    y_pred = xgb.predict(x_test)
+    mlp.fit(x_train, y_train)
+
+    y_pred = mlp.predict(x_test)
 
     acc = accuracy_score(y_test, y_pred)
     print(f"Accuracy: {acc}")
+
 
 """
     NOTES
@@ -83,6 +87,3 @@ def test():
 if __name__ == "__main__":
     print("Hello World!")
     test()
-    # https://www.geeksforgeeks.org/machine-learning/xgbclassifier/
-
-    # NOTE -> XGBoost requires continuous labels (i.e. 0,1,2,3 not 0,1,3)
