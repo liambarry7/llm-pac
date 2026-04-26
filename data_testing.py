@@ -1,5 +1,5 @@
 import pandas as pd
-from scipy.stats import zscore
+import numpy as np
 
 import os
 
@@ -94,11 +94,11 @@ def preprocess_file(file, f_name):
     # remove unwanted labels
     df_clean = remove_unwanted_labels(df_mapped, [8,9])
 
-    # normalise the dataset (x,y,z)
-    # ------ NEEDS IMPLEMENTING
+    # normalise the dataset (x,y,z) by participant using z-score - explain why
+    df_norm = normalisation(df_clean, ["x", "y", "z"])
 
     # sample dataset
-    df_sampled = sample_dataset(df_clean, 10000)
+    df_sampled = sample_dataset(df_norm, 7500)
 
     # save csv file (P001-S -> S for sampled)
     dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\cleaned-data"
@@ -110,7 +110,6 @@ def remove_na_dup(df):
 
     print("\n-- Drop NA Rows --")
     row_len_before_drop = df.shape[0]
-    print("\n-- Drop NA Rows --")
     nan_rows = df[df.isna().any(axis=1)]
     # print(f"nan rows: {nan_rows}")
     print(f"no of nan rows (rows with no labels): {len(nan_rows)}")
@@ -150,9 +149,19 @@ def remove_unwanted_labels(df, labels):
 
     return df
 
-def normalisation(df):
+def normalisation(df, columns):
     # normalise raw data in df
-    pass
+    for col in columns:
+        df[col] = zscore(df[col])
+
+    return df
+
+def zscore(column):
+    # z-score = (data - population mean) / population sd
+    col_m = np.mean(column)
+    col_std = np.std(column)
+    return (column - col_m) / col_std
+
 
 def sample_dataset(df, sample_size):
     # return a sample from the df
@@ -286,6 +295,32 @@ def test_play():
     df_sample.to_csv("D:\\kimia\\Documents\\University\\UEA\\Yr3 Project\\Dataset\\P001-T.csv", mode='w', index=False)
 
 def test_harness():
+    dir = "D:\\kimia\\Documents\\University\\UEA\\Yr3 Project\\Dataset\\P001-T.csv"
+
+    df = pd.read_csv(dir)
+    print(df.head())
+    print(f"File: ")
+    print(f"Columns: {df.columns}")
+    print(f"File size (total data points): {df.size}")
+    print(f"df shape: {df.shape}")
+
+    # get label values
+    print(df['annotation'].value_counts())
+
+    # remove missing values and duplicate rows
+    df_na_dup = remove_na_dup(df)
+
+    # map labels onto df
+    df_mapped = map_labels(df_na_dup)
+
+    # remove unwanted labels
+    df_clean = remove_unwanted_labels(df_mapped, [8, 9])
+
+    df_norm = normalisation(df_clean, ["x", "y", "z"])
+    print(f"Columns: {df_norm.columns}")
+    print(f"{df_norm.head()}")
+
+
     pass
 
 
@@ -293,10 +328,12 @@ def test_harness():
 if __name__ == "__main__":
     # test_play()
     # label_annotation_mapping()
-    # preprocess_dir()
-    # combine_data()
+    preprocess_dir()
+    combine_data()
 
     df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv")
     print(df.shape)
     print(df.columns)
     print(f"\nannotation + label + counts: \n {df[['label']].value_counts()}")
+
+    # test_harness()
