@@ -15,7 +15,9 @@ def fine_tuning():
     knn = KNeighborsClassifier(max_iter=1000, random_state=41)
 
     param_grid = [{
-
+        'n_neighbors': [1, 3, 5, 7],
+        'metric': ['euclidean', 'manhattan', 'minkowski', 'cosine'],
+        'leaf_size': [20, 30, 40] # does not affect accuracy, only speed and memory usage
     }]
 
     # five-fold - use StratifiedKFold to avoid imbalanced class distribution
@@ -42,7 +44,7 @@ def fine_tuning():
 
     # change these *****************
     results_df = results_df[
-        ['param_activation', 'param_hidden_layer_sizes', 'param_learning_rate', 'param_solver', 'mean_test_score',
+        ['param_n_neighbors', 'param_metric', 'param_leaf_size', 'mean_test_score',
          'std_test_score', 'rank_test_score']].sort_values(by='rank_test_score')
 
     print(results_df.head())
