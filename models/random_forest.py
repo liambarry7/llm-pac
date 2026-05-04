@@ -89,5 +89,5 @@ def test():
 """
 
 if __name__ == "__main__":
-    test()
-    # fine_tuning()
+    # test()
+    fine_tuning()
