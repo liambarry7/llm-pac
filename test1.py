@@ -29,28 +29,77 @@ print(tokenizer.decode(outputs[0]))
 # https://huggingface.co/google/gemma-2b
 
 x,y,z = 0
+x1,x2,x3,y1,y2,y3,z1,z2,z3,class1,class2,class3 = 0
 
-zero_shot_template = (
-    "Context: You are an expert in Physical Activity Classification. "
-    "The data was recorded from Axivity AX3 wrist-worn tri-axial accelerometer on their dominant hand. "
-    "The accelerometer was set to capture tri-axial acceleration data at 100 Hz with a dynamic range of  ±8g."
-    "Wearable cameras were used to collect ground truths of the participants’ activities while wearing the accelerometers. "
-    "Participants were given an OMG Life Autographer, a wearable camera worn around the neck which automatically takes photographs every 20 - 40 seconds\n", # string of activity classes
-    f"Options: {', '.join(activities)}\n", # string of activity classes
-    f"Data: x = {x}, y = {y}, z = {z}\n",
-    "Question: Which activity from the options above best matches the data?",
-    "Answer: "
-)
+# zero_shot_template = (
+#     "Context: You are an expert in Physical Activity Classification. "
+#     "The data was recorded from Axivity AX3 wrist-worn tri-axial accelerometer on their dominant hand. "
+#     "The accelerometer was set to capture tri-axial acceleration data at 100 Hz with a dynamic range of  ±8g."
+#     "Wearable cameras were used to collect ground truths of the participants’ activities while wearing the accelerometers. "
+#     "Participants were given an OMG Life Autographer, a wearable camera worn around the neck which automatically takes photographs every 20 - 40 seconds\n", # string of activity classes
+#     f"Labels: {', '.join(activities)}\n", # string of activity classes
+#     f"Data: x = {x}, y = {y}, z = {z}\n",
+#     "Question: Which activity from the options above best matches the data?",
+#     "Answer: "
+# )
 
-few_shot_template = (
-    "Context: You are an expert in Physical Activity Classification. "
-    "The data was recorded from Axivity AX3 wrist-worn tri-axial accelerometer on their dominant hand. "
-    "The accelerometer was set to capture tri-axial acceleration data at 100 Hz with a dynamic range of  ±8g."
-    "Wearable cameras were used to collect ground truths of the participants’ activities while wearing the accelerometers. "
-    "Participants were given an OMG Life Autographer, a wearable camera worn around the neck which automatically takes photographs every 20 - 40 seconds\n", # string of activity classes
-    f"Options: {', '.join(activities)}\n", # string of activity classes
-    f"Examples of correctly classified data: "
-    f"Data: x = {x}, y = {y}, z = {z}\n",
-    "Question: Which activity from the options above best matches the data?",
-    "Answer: "
-)
+zero_shot_template = f"""
+    Context: 
+    You are an expert in Physical Activity Classification.
+    The data was recorded from Axivity AX3 wrist-worn tri-axial accelerometer on their dominant hand.
+    The accelerometer was set to capture tri-axial acceleration data at 100 Hz with a dynamic range of ±8g.
+    Wearable cameras were used to collect ground truths of the participants’ activities while wearing the accelerometers.
+    Participants were given an OMG Life Autographer, a wearable camera worn around the neck which automatically takes photographs every 20 - 40 seconds
+    
+    Labels: {', '.join(activities)}
+    Data: x = {x}, y = {y}, z = {z}
+    Question: Which activity from the options above best matches the data?
+    Answer:
+"""
+
+# few_shot_template = (
+#     "Context: You are an expert in Physical Activity Classification. "
+#     "The data was recorded from Axivity AX3 wrist-worn tri-axial accelerometer on their dominant hand. "
+#     "The accelerometer was set to capture tri-axial acceleration data at 100 Hz with a dynamic range of  ±8g."
+#     "Wearable cameras were used to collect ground truths of the participants’ activities while wearing the accelerometers. "
+#     "Participants were given an OMG Life Autographer, a wearable camera worn around the neck which automatically takes photographs every 20 - 40 seconds\n", # string of activity classes
+#     f"Examples of correctly labelled data: \n"
+#     f"x = {x1}, y = {y1}, z = {z1}, Label = {class1}\n",
+#     f"x = {x2}, y = {y2}, z = {z2}, Label = {class2}\n",
+#     f"x = {x3}, y = {y3}, z = {z3}, Label = {class3}\n",
+#     f"Labels: {', '.join(activities)}\n",  # string of activity classes
+#     f"Data: x = {x}, y = {y}, z = {z}\n",
+#     "Question: Which activity from the options above best matches the data?",
+#     "Answer: "
+# )
+
+few_shot_template = f"""
+    Context: 
+    You are an expert in Physical Activity Classification.
+    The data was recorded from Axivity AX3 wrist-worn tri-axial accelerometer on their dominant hand.
+    The accelerometer was set to capture tri-axial acceleration data at 100 Hz with a dynamic range of ±8g.
+    Wearable cameras were used to collect ground truths of the participants’ activities while wearing the accelerometers.
+    Participants were given an OMG Life Autographer, a wearable camera worn around the neck which automatically takes photographs every 20 - 40 seconds
+    
+    Examples of correctly labelled data:
+    x = {x1}, y = {y1}, z = {z1}, Label = {class1}
+    x = {x1}, y = {y1}, z = {z1}, Label = {class1}
+    x = {x1}, y = {y1}, z = {z1}, Label = {class1}
+    x = {x1}, y = {y1}, z = {z1}, Label = {class1}
+    x = {x1}, y = {y1}, z = {z1}, Label = {class1}
+    
+    Labels: {', '.join(activities)}
+    Data: x = {x}, y = {y}, z = {z}
+    Question: Which activity from the options above best matches the data?
+    Answer:
+"""
+
+cot_template = f"""
+    Context: 
+        You are an expert in Physical Activity Classification.
+        The data was recorded from Axivity AX3 wrist-worn tri-axial accelerometer on their dominant hand.
+        The accelerometer was set to capture tri-axial acceleration data at 100 Hz with a dynamic range of ±8g.
+        Wearable cameras were used to collect ground truths of the participants’ activities while wearing the accelerometers.
+        Participants were given an OMG Life Autographer, a wearable camera worn around the neck which automatically takes photographs every 20 - 40 seconds
+        
+"""
