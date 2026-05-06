@@ -33,9 +33,9 @@ def fine_tuning():
 
     grid_search.fit(x_train, y_train)
 
-    print(f"Best DT params: {grid_search.best_params_}")
-    print(f"Best DT Object: {grid_search.best_estimator_}")
-    print(f"Best DT Accuracy Score: {grid_search.best_score_}")
+    print(f"Best params: {grid_search.best_params_}")
+    print(f"Best Object: {grid_search.best_estimator_}")
+    print(f"Best Accuracy Score: {grid_search.best_score_}")
 
     cv_res = grid_search.cv_results_
     print(cv_res.keys())

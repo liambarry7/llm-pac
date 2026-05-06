@@ -1,7 +1,9 @@
 from xgboost import XGBClassifier
 import pandas as pd
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score
 from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
+
+from llm import save_results
 
 dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv"
 df = pd.read_csv(dir)
@@ -46,7 +48,48 @@ def fine_tuning():
          'std_test_score', 'rank_test_score']].sort_values(by='rank_test_score')
     print(results_df.head())
 
-    results_df.to_csv('xgb_fine_tune_results.csv', index=False)
+    results_df.to_csv('results\\xgb_fine_tune_results.csv', index=False)
+
+def assess_model():
+    """
+    1. get best model params
+    2. feed them into model
+    3. train model
+    4. test model
+    5. record performance
+    """
+
+    # get best params
+    dir = r"results\xgb_fine_tune_results.csv"
+    df = pd.read_csv(dir)
+    optimal_params = df[['param_max_depth', 'param_learning_rate', 'param_n_estimators', 'param_colsample_bytree']].iloc[0]
+    params = optimal_params.to_list()
+
+    # check these
+    if pd.isna(params[1]):
+        params[1] = None
+    print(params)
+
+    xgb = XGBClassifier(max_depth=params[0], learning_rate=params[1], n_estimators=params[2], colsample_bytree=params[3])
+    xgb.fit(x_train, y_train)
+
+    y_pred = xgb.predict(x_test)
+
+    acc = accuracy_score(y_test, y_pred)
+    prec = precision_score(y_test, y_pred, average="weighted")
+    recall = recall_score(y_test, y_pred, average="weighted")
+    f1 = f1_score(y_test, y_pred, average="weighted")
+
+    print(f"Accuracy: {acc * 100:.2f}%")
+    print(f"Precision: {prec * 100:.2f}%")
+    print(f"Recall: {recall * 100:.2f}%")
+    print(f"F1-score: {f1 * 100:.2f}%")
+
+    # record results
+    model_type = "XGBoost"
+    model_data = [acc, prec, recall, f1]
+
+    save_results(model_type, model_data)
 
 def test():
     # https://www.geeksforgeeks.org/machine-learning/xgbclassifier/

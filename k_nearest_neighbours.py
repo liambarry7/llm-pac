@@ -1,7 +1,9 @@
 from sklearn.neighbors import KNeighborsClassifier
 import pandas as pd
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score
 from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
+
+from llm import save_results
 
 dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv"
 df = pd.read_csv(dir)
@@ -29,27 +31,63 @@ def fine_tuning():
 
     grid_search.fit(x_train, y_train)
 
-    print(f"Best DT params: {grid_search.best_params_}")
-    # print(dt_gridsearch.scoring)
-    print(f"Best DT Object: {grid_search.best_estimator_}")
-    print(f"Best DT Accuracy Score: {grid_search.best_score_}")
-    # print(dt_gridsearch.cv_results_)
+    print(f"Best params: {grid_search.best_params_}")
+    print(f"Best Object: {grid_search.best_estimator_}")
+    print(f"Best Accuracy Score: {grid_search.best_score_}")
 
     cv_res = grid_search.cv_results_
     print(cv_res.keys())
 
     results_df = pd.DataFrame(grid_search.cv_results_)
-    # params = params used, mean_test_score = avg score over 5 folds, std_test_score =
-    # results_df = results_df[['params', 'mean_test_score', 'std_test_score', 'rank_test_score']].sort_values(by='rank_test_score')
 
-    # change these *****************
     results_df = results_df[
         ['param_n_neighbors', 'param_metric', 'param_leaf_size', 'mean_test_score',
          'std_test_score', 'rank_test_score']].sort_values(by='rank_test_score')
 
     print(results_df.head())
 
-    results_df.to_csv('knn_fine_tune_results.csv', index=False)
+    results_df.to_csv('results\\knn_fine_tune_results.csv', index=False)
+
+def assess_model():
+    """
+    1. get best model params
+    2. feed them into model
+    3. train model
+    4. test model
+    5. record performance
+    """
+
+    # get best params
+    dir = r"results\knn_fine_tune_results.csv"
+    df = pd.read_csv(dir)
+    optimal_params = df[['param_n_neighbors', 'param_metric', 'param_leaf_size']].iloc[0]
+    params = optimal_params.to_list()
+
+    # check these
+    if pd.isna(params[1]):
+        params[1] = None
+    print(params)
+
+    knn = KNeighborsClassifier(max_iter=1000, n_neighbors=params[0], metric=params[1], leaf_size=params[2], random_state=41)
+    knn.fit(x_train, y_train)
+
+    y_pred = knn.predict(x_test)
+
+    acc = accuracy_score(y_test, y_pred)
+    prec = precision_score(y_test, y_pred, average="weighted")
+    recall = recall_score(y_test, y_pred, average="weighted")
+    f1 = f1_score(y_test, y_pred, average="weighted")
+
+    print(f"Accuracy: {acc * 100:.2f}%")
+    print(f"Precision: {prec * 100:.2f}%")
+    print(f"Recall: {recall * 100:.2f}%")
+    print(f"F1-score: {f1 * 100:.2f}%")
+
+    # record results
+    model_type = "kNN"
+    model_data = [acc, prec, recall, f1]
+
+    save_results(model_type, model_data)
 
 
 def test():
