@@ -98,12 +98,11 @@ def preprocess_file(file, f_name):
     df_norm = normalisation(df_clean, ["x", "y", "z"])
 
     # sample dataset
-    df_sampled = sample_dataset(df_norm, 7500)
+    df_sampled = sample_dataset(df_norm, 1000)
 
     # save csv file (P001-S -> S for sampled)
     dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\cleaned-data"
     df_sampled.to_csv(f"{dir}\\{f_name}-S.csv", mode='w', index=False)
-
 
 def remove_na_dup(df):
     # remove any rows with na values and duplicates
@@ -320,7 +319,7 @@ def test_harness():
     print(f"{df_norm.head()}")
 
     # sample dataset
-    df_sampled = sample_dataset(df_norm, 7500)
+    df_sampled = sample_dataset(df_norm, 1000)
 
     print(f"Columns: {df_sampled.columns}")
     print(f"File size (total data points): {df_sampled.size}")
@@ -340,4 +339,4 @@ if __name__ == "__main__":
     print(df.columns)
     print(f"\nannotation + label + counts: \n {df[['label']].value_counts()}")
 
-    test_harness()
+    # test_harness()
