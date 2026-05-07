@@ -31,18 +31,14 @@ def fine_tuning():
 
     grid_search.fit(x_train, y_train)
 
-    print(f"Best DT params: {grid_search.best_params_}")
-    # print(dt_gridsearch.scoring)
-    print(f"Best DT Object: {grid_search.best_estimator_}")
-    print(f"Best DT Accuracy Score: {grid_search.best_score_}")
-    # print(dt_gridsearch.cv_results_)
+    print(f"Best params: {grid_search.best_params_}")
+    print(f"Best Object: {grid_search.best_estimator_}")
+    print(f"Best Accuracy Score: {grid_search.best_score_}")
 
     cv_res = grid_search.cv_results_
     print(cv_res.keys())
 
     results_df = pd.DataFrame(grid_search.cv_results_)
-    # params = params used, mean_test_score = avg score over 5 folds, std_test_score =
-    # results_df = results_df[['params', 'mean_test_score', 'std_test_score', 'rank_test_score']].sort_values(by='rank_test_score')
     results_df = results_df[
         ['param_max_depth', 'param_learning_rate', 'param_n_estimators', 'param_colsample_bytree', 'mean_test_score',
          'std_test_score', 'rank_test_score']].sort_values(by='rank_test_score')
@@ -65,12 +61,8 @@ def assess_model():
     optimal_params = df[['param_max_depth', 'param_learning_rate', 'param_n_estimators', 'param_colsample_bytree']].iloc[0]
     params = optimal_params.to_list()
 
-    # check these
-    if pd.isna(params[1]):
-        params[1] = None
-    print(params)
 
-    xgb = XGBClassifier(max_depth=params[0], learning_rate=params[1], n_estimators=params[2], colsample_bytree=params[3])
+    xgb = XGBClassifier(max_depth=int(params[0]), learning_rate=params[1], n_estimators=int(params[2]), colsample_bytree=params[3])
     xgb.fit(x_train, y_train)
 
     y_pred = xgb.predict(x_test)
@@ -125,7 +117,9 @@ def test():
 
 if __name__ == "__main__":
     print("Hello World!")
-    test()
+    # test()
     # https://www.geeksforgeeks.org/machine-learning/xgbclassifier/
 
     # NOTE -> XGBoost requires continuous labels (i.e. 0,1,2,3 not 0,1,3)
+    # fine_tuning()
+    assess_model()
