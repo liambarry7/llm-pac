@@ -13,7 +13,7 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_
 
 def fine_tuning():
     # create new mlp
-    mlp = MLPClassifier(max_iter=1000, solver='Adam', random_state=41)
+    mlp = MLPClassifier(max_iter=1000, solver='adam', random_state=41)
 
     param_grid = [{
         'hidden_layer_sizes': [(64, 32), (32, 32), (75, 50), (48, 16)],
@@ -61,12 +61,11 @@ def assess_model():
     optimal_params = df[['param_activation', 'param_hidden_layer_sizes', 'param_alpha']].iloc[0]
     params = optimal_params.to_list()
 
-    # check these
-    if pd.isna(params[1]):
-        params[1] = None
-    print(params)
+    import ast  # https://www.geeksforgeeks.org/python/difference-between-eval-and-ast-literal-eval-in-python/
+    params[1] = ast.literal_eval(params[1])  # convert hidden_layer_sizes from string back into tuple
 
-    mlp = MLPClassifier(max_iter=1000, solver='Adam', activation=params[0], hidden_layer_sizes=params[2], alpha=params[3], random_state=41)
+
+    mlp = MLPClassifier(max_iter=1000, solver='adam', activation=params[0], hidden_layer_sizes=params[1], alpha=params[2], random_state=41)
     mlp.fit(x_train, y_train)
 
     y_pred = mlp.predict(x_test)
@@ -124,4 +123,5 @@ def test():
 if __name__ == "__main__":
     print("Hello World!")
     # test()
-    fine_tuning()
+    # fine_tuning()
+    assess_model()

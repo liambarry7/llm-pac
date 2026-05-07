@@ -189,9 +189,9 @@ def few_shot_promptingTEST():
     y_unencoded = remap_labels(y_train, "encode_to_label")
     pred_labels = []
 
-    training = x_train.copy()
-    training['label'] = y_unencoded
-    training_examples = training.groupby('label', group_keys=False).sample(n=1)
+    # training = x_train.copy()
+    # training['label'] = y_unencoded
+    # training_examples = training.groupby('label', group_keys=False).sample(n=1)
 
     for i in range(len(x_test)):
         # get random 1 sample of each class type to use as example
@@ -199,14 +199,14 @@ def few_shot_promptingTEST():
         # print(x_train)
         # print(y_train)
 
-        # training = x_train.copy()
-        # training['label'] = y_unencoded
-        # training_examples = training.groupby('label', group_keys=False).sample(n=1)
+        training = x_train.copy()
+        training['label'] = y_unencoded
+        training_examples = training.groupby('label', group_keys=False).sample(n=1)
         # print(training_examples)
         # print(training_examples['label'].unique())
 
         few_shot_template = f"""
-            Context: 
+            Context:
             You are an expert in Physical Activity Classification.
             The data was recorded from Axivity AX3 wrist-worn tri-axial accelerometer on their dominant hand.
             The accelerometer was set to capture tri-axial acceleration data at 100 Hz with a dynamic range of ±8g.
@@ -228,6 +228,8 @@ def few_shot_promptingTEST():
             Question: Which activity from the options above best matches the data?
             Answer:
         """
+
+
 
         # print(few_shot_template)
         print(i)
