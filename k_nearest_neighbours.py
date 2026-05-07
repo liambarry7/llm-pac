@@ -14,7 +14,7 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_
 
 def fine_tuning():
     # create new mlp
-    knn = KNeighborsClassifier(max_iter=1000, random_state=41)
+    knn = KNeighborsClassifier()
 
     param_grid = [{
         'n_neighbors': [1, 3, 5, 7],
@@ -63,12 +63,7 @@ def assess_model():
     optimal_params = df[['param_n_neighbors', 'param_metric', 'param_leaf_size']].iloc[0]
     params = optimal_params.to_list()
 
-    # check these
-    if pd.isna(params[1]):
-        params[1] = None
-    print(params)
-
-    knn = KNeighborsClassifier(max_iter=1000, n_neighbors=params[0], metric=params[1], leaf_size=params[2], random_state=41)
+    knn = KNeighborsClassifier(n_neighbors=params[0], metric=params[1], leaf_size=params[2])
     knn.fit(x_train, y_train)
 
     y_pred = knn.predict(x_test)
@@ -112,5 +107,6 @@ def test():
 
 
 if __name__ == "__main__":
-    print("Hello World!")
-    test()
+    # test()
+    # fine_tuning()
+    assess_model()
