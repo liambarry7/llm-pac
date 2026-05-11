@@ -1,19 +1,45 @@
-from sklearn.ensemble import RandomForestClassifier
+import json
+import pickle
+import sys
+
 import pandas as pd
-from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score
+import numpy as np
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
-from llm import save_results
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from standard_preprocessing import get_standard_dataset
+from feature_preprocessing import get_feature_dataset
+
+def test_model_basic(x_train, x_test, y_train, y_test, dataset_type):
+    rf = RandomForestClassifier()
+    rf.fit(x_train, y_train)
+
+    y_pred = rf.predict(x_test)
+
+    acc = accuracy_score(y_test, y_pred)
+    prec = precision_score(y_test, y_pred, average="weighted")
+    recall = recall_score(y_test, y_pred, average="weighted")
+    f1 = f1_score(y_test, y_pred, average="weighted")
+
+    print(f"Accuracy: {acc * 100:.2f}%")
+    print(f"Precision: {prec * 100:.2f}%")
+    print(f"Recall: {recall * 100:.2f}%")
+    print(f"F1-score: {f1 * 100:.2f}%")
+
+    # record results
+    model_type = "Random Forest - TEST"
+    model_data = [dataset_type, acc, prec, recall, f1]
+    save_results(model_type, model_data)
+
+    # generate confusion matrix
+    generate_cm(y_test, y_pred, "TEST-RF", dataset_type)
 
 
-dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv"
-df = pd.read_csv(dir)
-x = df.drop(columns=['time', 'annotation', 'label']).to_numpy()
-y = df['label'].to_numpy()
-
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
-
-
-def fine_tuning():
+def fine_tuning(x_train, y_train, dataset_type):
     # create rf model with no params
     rf = RandomForestClassifier(random_state=42)
 
@@ -41,15 +67,15 @@ def fine_tuning():
     print(cv_res.keys())
 
     results_df = pd.DataFrame(grid_search.cv_results_)
-    # params = params used, mean_test_score = avg score over 5 folds, std_test_score =
     results_df = results_df[
         ['param_n_estimators', 'param_max_depth', 'param_min_samples_leaf', 'param_min_samples_split', 'mean_test_score',
          'std_test_score', 'rank_test_score']].sort_values(by='rank_test_score')
     print(results_df.head())
 
-    results_df.to_csv('results\\rf_fine_tune_results.csv', index=False)
+    results_df.to_csv(f'results\\rf_fine_tune_results_{dataset_type}.csv', index=False)
 
-def assess_model():
+
+def assess_model(x_train, x_test, y_train, y_test, dataset_type):
     """
     1. get best model params
     2. feed them into model
@@ -59,7 +85,7 @@ def assess_model():
     """
 
     # get best params
-    dir = r"results\rf_fine_tune_results.csv"
+    dir = f"results\\rf_fine_tune_results_{dataset_type}.csv"
     df = pd.read_csv(dir)
     optimal_params = df[['param_n_estimators', 'param_max_depth', 'param_min_samples_leaf', 'param_min_samples_split']].iloc[0]
     params = optimal_params.to_list()
@@ -68,6 +94,7 @@ def assess_model():
     print(params)
 
     rf = RandomForestClassifier(n_estimators=int(params[0]), max_depth=params[1], min_samples_leaf=int(params[2]), min_samples_split=int(params[3]), random_state=42)
+
     rf.fit(x_train, y_train)
 
     y_pred = rf.predict(x_test)
@@ -84,109 +111,86 @@ def assess_model():
 
     # record results
     model_type = "Random Forest"
-    model_data = [acc, prec, recall, f1]
+    model_data = [dataset_type, acc, prec, recall, f1]
 
     save_results(model_type, model_data)
 
-def test():
-    # dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\P001-S.csv"
-    dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv"
-    # dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv"
-    df = pd.read_csv(dir)
-    # df = df.drop(columns=['time', 'annotation'])
-    print(df.columns)
-    print(df.head(15))
+    # create confusion matrix
+    generate_cm(y_test, y_pred, "rf", dataset_type)
 
-    x = df.drop(columns=['time', 'annotation', 'label'])
-    # x = df.drop(columns=['label'])
-    y = df['label']
-
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
-
-    print(len(x_train))
-    print(len(x_test))
-
-    import time
-    start = time.time()
-    rf = RandomForestClassifier(n_estimators=100,
-    random_state=42)
-
-    rf.fit(x_train, y_train)
-    print(time.time() - start)
-
-    y_pred = rf.predict(x_test)
+    # save model
+    with open(f'models\\rf.pkl', 'wb') as file:
+        pickle.dump(rf, file)
 
 
-    acc = accuracy_score(y_test, y_pred)
-    print(f"Accuracy: {acc}")
+def save_results(model_type, metrics):
+    model_data = {
+        "dataset": metrics[0],
+        "accuracy": metrics[1],
+        "precision": metrics[2],
+        "recall": metrics[3],
+        "f1-score": metrics[4]
+    }
 
-    print(classification_report(y_test, y_pred))
+    path = r"results\model_results.json"
+    with open(path, "r") as file:
+        model_rs = json.load(file)
 
-    acc = accuracy_score(y_test, y_pred)
-    prec = precision_score(y_test, y_pred, average="weighted")
-    recall = recall_score(y_test, y_pred, average="weighted")
-    f1 = f1_score(y_test, y_pred, average="weighted")
+    model_rs['model_results'][model_type] = model_data
 
-    print(f"Accuracy: {acc * 100:.2f}%")
-    print(f"Precision: {prec * 100:.2f}%")
-    print(f"Recall: {recall * 100:.2f}%")
-    print(f"F1-score: {f1 * 100:.2f}%")
+    with open(path, "w") as file:
+        json.dump(model_rs, file, indent=4)
 
-    # record results
-    model_type = "Random Forest"
-    model_data = [acc, prec, recall, f1]
 
-    # save_results(model_type, model_data)
+def generate_cm(y_test, y_pred, model_type, dataset_type):
+    # remap labels
+    labels = ["sleep", "sitting", "walking", "bicycling", "mixed-activity", "standing", "manual-work", "sports"]
 
-def test_features():
-    dir1 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv"
-    df_train = pd.read_csv(dir1)
+    # cm = confusion_matrix(y_test, y_pred)
+    #
+    # plt.figure(figsize=(12, 10))
+    # sns.heatmap(cm, annot=True, fmt="d", cmap="viridis", xticklabels=labels, yticklabels=labels)
+    # plt.xlabel("Predicted")
+    # plt.ylabel("True")
+    # plt.title(f"{model_type} Confusion Matrix ({dataset_type})")
+    # plt.savefig(f"graphs\\{model_type}_{dataset_type}_cm.png")
+    # plt.show()
 
-    dir2 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA-SS.csv"
-    df_test = pd.read_csv(dir2)
+    cm = confusion_matrix(y_test, y_pred)
+    cm = cm.astype(float) / cm.sum(axis=1)[:, np.newaxis]
 
-    # x = df.drop(columns=['time', 'annotation', 'label'])
-    x_train = df_train.drop(columns=['label'])
-    y_train = df_train['label']
+    plt.figure(figsize=(12, 10))
+    sns.heatmap(cm, annot=True, fmt=".1%", cmap="viridis", xticklabels=labels, yticklabels=labels)
+    plt.xlabel("Predicted")
+    plt.ylabel("True")
+    plt.title(f"{model_type} Confusion Matrix ({dataset_type})")
+    plt.savefig(f"graphs\\{model_type}_{dataset_type}_cm.png")
+    plt.show()
 
-    x_test = df_test.drop(columns=['label'])
-    y_test = df_test['label']
 
-    print(len(x_train))
-    print(len(x_test))
 
-    import time
-    start = time.time()
-    rf = RandomForestClassifier(n_estimators=100, max_depth=None, min_samples_leaf=1, min_samples_split=2, random_state=42)
 
-    rf.fit(x_train, y_train)
-    print(time.time() - start)
-
-    y_pred = rf.predict(x_test)
-
-    acc = accuracy_score(y_test, y_pred)
-    print(f"Accuracy: {acc}")
-
-    print(classification_report(y_test, y_pred))
-
-    acc = accuracy_score(y_test, y_pred)
-    prec = precision_score(y_test, y_pred, average="weighted")
-    recall = recall_score(y_test, y_pred, average="weighted")
-    f1 = f1_score(y_test, y_pred, average="weighted")
-
-    print(f"Accuracy: {acc * 100:.2f}%")
-    print(f"Precision: {prec * 100:.2f}%")
-    print(f"Recall: {recall * 100:.2f}%")
-    print(f"F1-score: {f1 * 100:.2f}%")
-
-    # record results
-    model_type = "Random Forest"
-    model_data = [acc, prec, recall, f1]
 
 
 
 if __name__ == "__main__":
-    # test()
-    # fine_tuning()
-    # assess_model()
-    test_features()
+    # dataset_type = "standard"
+    dataset_type = "feature"
+
+    if dataset_type == "standard":
+        x_train, x_test, y_train, y_test = get_standard_dataset()
+
+        test_model_basic(x_train, x_test, y_train, y_test, dataset_type)
+
+        # fine_tuning(x_train, y_train, dataset_type)
+
+        # assess_model(x_train, x_test, y_train, y_test)
+
+    elif dataset_type == "feature":
+        x_train, x_test, y_train, y_test = get_feature_dataset()
+
+        test_model_basic(x_train, x_test, y_train, y_test, dataset_type)
+
+        # fine_tuning(x_train, y_train, dataset_type)
+
+        # assess_model(x_train, x_test, y_train, y_test, dataset_type)

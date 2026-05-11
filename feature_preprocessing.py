@@ -243,8 +243,6 @@ def scale_and_sample_data():
     target_size = 100000
     train_sampled = sample_dataset(train_scaled, int(target_size*0.8), training=True)
     test_sampled = sample_dataset(test_scaled, int(target_size*0.2), training=False)
-    # train_sampled = sample_dataset(train_scaled, 40000, training=True)
-    # test_sampled = sample_dataset(test_scaled, 10000, training=False)
 
     print(f"Training size: {train_sampled.shape}")
     print(f"Testing size: {test_sampled.shape}")
@@ -274,6 +272,21 @@ def sample_dataset(df, sample_size, training):
     print(df_sample.head())
 
     return df_sample
+
+def get_feature_dataset():
+    dir1 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv"
+    df_train = pd.read_csv(dir1)
+
+    dir2 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA-SS.csv"
+    df_test = pd.read_csv(dir2)
+
+    x_train = df_train.drop(columns=['label'])
+    y_train = df_train['label']
+
+    x_test = df_test.drop(columns=['label'])
+    y_test = df_test['label']
+
+    return x_train, x_test, y_train, y_test
 
 if __name__ == "__main__":
 

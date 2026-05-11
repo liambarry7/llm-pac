@@ -3,6 +3,7 @@ import numpy as np
 
 import os
 
+from sklearn.model_selection import train_test_split
 
 
 def label_annotation_mapping():
@@ -53,7 +54,7 @@ def preprocess_dir():
             print("\n" + raw_name)
             # print("\n" + os.path.join(data_dir, f.name))
             # preprocess_file(os.path.join(data_dir, f.name), raw_name)
-#
+
 def combine_data():
     # function to loop through cleaned csvs and concat them together to form a master cleaned file w/ all data
     data_dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\cleaned-data"
@@ -173,6 +174,17 @@ def sample_dataset(df, sample_size):
     print(df_sample.head())
 
     return df_sample
+
+def get_standard_dataset():
+    dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv"
+    df = pd.read_csv(dir)
+    x = df.drop(columns=['time', 'annotation', 'label']).to_numpy()
+    y = df['label'].to_numpy()
+
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+
+    return x_train, x_test, y_train, y_test
+
 
 def test_play():
     print("-- Initial data --")

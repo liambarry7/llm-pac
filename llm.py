@@ -34,7 +34,7 @@ model = AutoModelForCausalLM.from_pretrained("google/gemma-2b-it", device_map="a
 
 # https://huggingface.co/google/gemma-2b
 
-activities = ["sitting", "standing", "mixed-activity", "walking", "manual-work", "sports", "bicycling", "sleep"]
+activities = ["sleep", "sitting", "walking", "bicycling", "mixed-activity", "standing", "manual-work", "sports"]
 
 x,y,z = 0, 0, 0
 
@@ -427,7 +427,7 @@ def remap_labels(label_list, direction):
     # get all unique pairs
     labels = label_df[['label:WillettsSpecific2018', 'encoded_label']].drop_duplicates().reset_index(drop=True)
     labels = labels.drop(labels[labels['encoded_label'].isin([8, 9])].index)
-    # print(labels)
+    print(labels)
 
     if direction == "label_to_encode":
         mapping = dict(zip(
@@ -445,25 +445,7 @@ def remap_labels(label_list, direction):
 
         return [mapping.get(code, None) for code in label_list]
 
-def save_results(model_type, metrics):
-    model_data = {
-        "dataset": metrics[0],
-        "accuracy": metrics[1],
-        "precision": metrics[2],
-        "recall": metrics[3],
-        "f1-score": metrics[4]
-    }
 
-    path = r"results\model_results.json"
-    # path = r"D:\kimia\Documents\University\UEA\Yr3 Project\llm-pac\results\model_results.json"
-    with open(path, "r") as file:
-        model_rs = json.load(file)
-
-    model_rs['model_results'][model_type] = model_data
-    # model_rs['model_results'].append(model_data)
-
-    with open(path, "w") as file:
-        json.dump(model_rs, file, indent=4)
 
 def test():
     labels = ['sitting', 'walking', 'sitting']
