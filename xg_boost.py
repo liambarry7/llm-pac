@@ -107,13 +107,26 @@ def test():
     acc = accuracy_score(y_test, y_pred)
     print(f"Accuracy: {acc}")
 
-"""
-    NOTES
-    - turn x/y into numpy arrays
-    - fine tune ->  
-    - use x for fine tuning https://www.kaggle.com/code/prashant111/a-guide-on-xgboost-hyperparameters-tuning
-    - save each result in a csv file
-"""
+def test_features():
+    dir1 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv"
+    df_train = pd.read_csv(dir1)
+
+    dir2 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA-SS.csv"
+    df_test = pd.read_csv(dir2)
+
+    x_train = df_train.drop(columns=['label'])
+    y_train = df_train['label']
+
+    x_test = df_test.drop(columns=['label'])
+    y_test = df_test['label']
+
+    xgb = XGBClassifier()
+    xgb.fit(x_train, y_train)
+
+    y_pred = xgb.predict(x_test)
+
+    acc = accuracy_score(y_test, y_pred)
+    print(f"Accuracy: {acc}")
 
 if __name__ == "__main__":
     print("Hello World!")

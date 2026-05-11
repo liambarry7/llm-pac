@@ -6,7 +6,8 @@ import json
 import pandas as pd
 import re
 
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, ConfusionMatrixDisplay, \
+    confusion_matrix
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
@@ -128,17 +129,22 @@ def zero_shot_prompting():
         response = tokenizer.decode(outputs[0], skip_special_tokens = True)
         print(response)
 
-        # extract label
-        label = re.findall(r"\*\*(.*?)\*\*", response)[0]
-        print(label)
+        try:
+            # extract label
+            label = re.findall(r"\*\*(.*?)\*\*", response)[0]
+            print(label)
 
-        # check label in activities
-        if label in activities:
-            pred_labels.append(label)
-        else:
+            # check label in activities
+            if label in activities:
+                pred_labels.append(label)
+            else:
+                pred_labels.append("N/A")
+
+        except:
             pred_labels.append("N/A")
 
-        if i == 10:
+
+        if i == 50:
             break
 
 
@@ -167,6 +173,10 @@ def zero_shot_prompting():
     # record results
     model_type = "Zero-shot Prompting"
     model_data = [acc, prec, recall, f1]
+
+    # cm = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix(y_test, pred_labels_encoded))
+    # cm.set_title("Zero-shot")
+
 
     save_results(model_type, model_data)
 
@@ -248,19 +258,22 @@ def few_shot_promptingTEST():
         response = tokenizer.decode(outputs[0], skip_special_tokens=True)
         print(response)
 
-        # extract label
-        label = re.findall(r"\*\*(.*?)\*\*", response)[0]
-        print(label)
+        try:
+            # extract label
+            label = re.findall(r"\*\*(.*?)\*\*", response)[0]
+            print(label)
 
-        # check label in activities
-        if label in activities:
-            pred_labels.append(label)
-        else:
+            # check label in activities
+            if label in activities:
+                pred_labels.append(label)
+            else:
+                pred_labels.append("N/A")
+
+        except:
             pred_labels.append("N/A")
 
-        if i == 10:
+        if i == 50:
             break
-
 
     print(pred_labels)
 
@@ -357,15 +370,21 @@ def few_shot_prompting():
         response = tokenizer.decode(outputs[0], skip_special_tokens=True)
         print(response)
 
-        # extract label
-        label = re.findall(r"\*\*(.*?)\*\*", response)[0]
-        print(label)
+        try:
+            # extract label
+            label = re.findall(r"\*\*(.*?)\*\*", response)[0]
+            print(label)
 
-        # check label in activities
-        if label in activities:
-            pred_labels.append(label)
-        else:
+            # check label in activities
+            if label in activities:
+                pred_labels.append(label)
+            else:
+                pred_labels.append("N/A")
+
+        except:
             pred_labels.append("N/A")
+
+
 
         if i == 50:
             break
@@ -428,10 +447,11 @@ def remap_labels(label_list, direction):
 
 def save_results(model_type, metrics):
     model_data = {
-        "accuracy": metrics[0],
-        "precision": metrics[1],
-        "recall": metrics[2],
-        "f1-score": metrics[3]
+        "dataset": metrics[0],
+        "accuracy": metrics[1],
+        "precision": metrics[2],
+        "recall": metrics[3],
+        "f1-score": metrics[4]
     }
 
     path = r"results\model_results.json"
@@ -460,8 +480,8 @@ def test():
 if __name__ == "__main__":
     # test()
     #
-    # zero_shot_prompting()
+    zero_shot_prompting()
     # few_shot_prompting()
 
 
-    few_shot_promptingTEST()
+    # few_shot_promptingTEST()

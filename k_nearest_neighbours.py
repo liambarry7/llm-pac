@@ -87,14 +87,16 @@ def assess_model():
 
 def test():
     # dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\P001-S.csv"
-    dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv"
+    # dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv"
+    dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv"
     df = pd.read_csv(dir)
     # df = df.drop(columns=['time', 'annotation'])
     print(df.columns)
     print(df.head(15))
 
-    x = df.drop(columns=['time', 'annotation', 'label']).to_numpy()
-    y = df['label'].to_numpy()
+    x = df.drop(columns=['time', 'annotation', 'label'])
+    # x = df.drop(columns=['label'])
+    y = df['label']
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=42)
 
@@ -105,8 +107,29 @@ def test():
     knn_acc = accuracy_score(y_test, y_pred)
     print(f"accuracy knn: {knn_acc}")
 
+def test_features():
+    dir1 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv"
+    df_train = pd.read_csv(dir1)
+
+    dir2 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA-SS.csv"
+    df_test = pd.read_csv(dir2)
+
+    # x = df.drop(columns=['time', 'annotation', 'label'])
+    x_train = df_train.drop(columns=['label'])
+    y_train = df_train['label']
+
+    x_test = df_test.drop(columns=['label'])
+    y_test = df_test['label']
+
+    knn = KNeighborsClassifier()
+    knn.fit(x_train, y_train)
+
+    y_pred = knn.predict(x_test)
+    knn_acc = accuracy_score(y_test, y_pred)
+    print(f"accuracy knn: {knn_acc}")
 
 if __name__ == "__main__":
     # test()
     # fine_tuning()
-    assess_model()
+    # assess_model()
+    test_features()

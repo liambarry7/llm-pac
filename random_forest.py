@@ -91,12 +91,14 @@ def assess_model():
 def test():
     # dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\P001-S.csv"
     dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv"
+    # dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv"
     df = pd.read_csv(dir)
     # df = df.drop(columns=['time', 'annotation'])
     print(df.columns)
     print(df.head(15))
 
     x = df.drop(columns=['time', 'annotation', 'label'])
+    # x = df.drop(columns=['label'])
     y = df['label']
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
@@ -134,10 +136,57 @@ def test():
     model_type = "Random Forest"
     model_data = [acc, prec, recall, f1]
 
-    save_results(model_type, model_data)
+    # save_results(model_type, model_data)
+
+def test_features():
+    dir1 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv"
+    df_train = pd.read_csv(dir1)
+
+    dir2 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA-SS.csv"
+    df_test = pd.read_csv(dir2)
+
+    # x = df.drop(columns=['time', 'annotation', 'label'])
+    x_train = df_train.drop(columns=['label'])
+    y_train = df_train['label']
+
+    x_test = df_test.drop(columns=['label'])
+    y_test = df_test['label']
+
+    print(len(x_train))
+    print(len(x_test))
+
+    import time
+    start = time.time()
+    rf = RandomForestClassifier(n_estimators=100, max_depth=None, min_samples_leaf=1, min_samples_split=2, random_state=42)
+
+    rf.fit(x_train, y_train)
+    print(time.time() - start)
+
+    y_pred = rf.predict(x_test)
+
+    acc = accuracy_score(y_test, y_pred)
+    print(f"Accuracy: {acc}")
+
+    print(classification_report(y_test, y_pred))
+
+    acc = accuracy_score(y_test, y_pred)
+    prec = precision_score(y_test, y_pred, average="weighted")
+    recall = recall_score(y_test, y_pred, average="weighted")
+    f1 = f1_score(y_test, y_pred, average="weighted")
+
+    print(f"Accuracy: {acc * 100:.2f}%")
+    print(f"Precision: {prec * 100:.2f}%")
+    print(f"Recall: {recall * 100:.2f}%")
+    print(f"F1-score: {f1 * 100:.2f}%")
+
+    # record results
+    model_type = "Random Forest"
+    model_data = [acc, prec, recall, f1]
+
 
 
 if __name__ == "__main__":
     # test()
     # fine_tuning()
-    assess_model()
+    # assess_model()
+    test_features()
