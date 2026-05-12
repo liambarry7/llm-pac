@@ -1,17 +1,46 @@
+import pickle
+
 from sklearn.neural_network import MLPClassifier
 import pandas as pd
 from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score
 from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
 
-from llm import save_results
+from random_forest import save_results, generate_cm
 
-dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv"
-df = pd.read_csv(dir)
-x = df.drop(columns=['time', 'annotation', 'label']).to_numpy()
-y = df['label'].to_numpy()
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+from standard_preprocessing import get_standard_dataset
+from feature_preprocessing import get_feature_dataset
 
-def fine_tuning():
+# dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv"
+# df = pd.read_csv(dir)
+# x = df.drop(columns=['time', 'annotation', 'label']).to_numpy()
+# y = df['label'].to_numpy()
+# x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+
+def test_model_basic(x_train, x_test, y_train, y_test, dataset_type):
+    mlp = MLPClassifier(max_iter=1000, random_state=41)
+    mlp.fit(x_train, y_train)
+
+    y_pred = mlp.predict(x_test)
+
+    acc = accuracy_score(y_test, y_pred)
+    prec = precision_score(y_test, y_pred, average="weighted")
+    recall = recall_score(y_test, y_pred, average="weighted")
+    f1 = f1_score(y_test, y_pred, average="weighted")
+
+    print(f"Accuracy: {acc * 100:.2f}%")
+    print(f"Precision: {prec * 100:.2f}%")
+    print(f"Recall: {recall * 100:.2f}%")
+    print(f"F1-score: {f1 * 100:.2f}%")
+
+    # record results
+    model_type = "MLP - TEST"
+    model_data = [dataset_type, acc, prec, recall, f1]
+    save_results(model_type, model_data)
+
+    # generate confusion matrix
+    generate_cm(y_test, y_pred, "TEST-MLP", dataset_type)
+
+def fine_tuning(x_train, y_train, dataset_type):
     # create new mlp
     mlp = MLPClassifier(max_iter=1000, solver='adam', random_state=41)
 
@@ -44,9 +73,9 @@ def fine_tuning():
 
     print(results_df.head())
 
-    results_df.to_csv('results\\mlp_fine_tune_results.csv', index=False)
+    results_df.to_csv(f'results\\mlp_fine_tune_results_{dataset_type}.csv', index=False)
 
-def assess_model():
+def assess_model(x_train, x_test, y_train, y_test, dataset_type):
     """
     1. get best model params
     2. feed them into model
@@ -56,7 +85,7 @@ def assess_model():
     """
 
     # get best params
-    dir = r"results\mlp_fine_tune_results.csv"
+    dir = f"results\\mlp_fine_tune_results_{dataset_type}.csv"
     df = pd.read_csv(dir)
     optimal_params = df[['param_activation', 'param_hidden_layer_sizes', 'param_alpha']].iloc[0]
     params = optimal_params.to_list()
@@ -81,62 +110,37 @@ def assess_model():
     print(f"F1-score: {f1 * 100:.2f}%")
 
     # record results
-    model_type = "MLP"
-    model_data = [acc, prec, recall, f1]
+    model_type = "mlp"
+    model_data = [dataset_type, acc, prec, recall, f1]
 
     save_results(model_type, model_data)
 
-def test():
-    # https://www.geeksforgeeks.org/machine-learning/xgbclassifier/
+    # create confusion matrix
+    generate_cm(y_test, y_pred, "mlp", dataset_type)
 
-    # dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\P001-S.csv"
-    dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv"
+    # save model
+    with open(f'models\\mlp.pkl', 'wb') as file:
+        pickle.dump(mlp, file)
 
-    df = pd.read_csv(dir)
-    # df = df.drop(columns=['time', 'annotation'])
-    print(df.columns)
-    print(df.head(15))
-
-    x = df.drop(columns=['time', 'annotation', 'label'])
-    y = df['label']
-
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
-
-    mlp = MLPClassifier(max_iter=1000, random_state=41)
-
-    mlp.fit(x_train, y_train)
-
-    y_pred = mlp.predict(x_test)
-
-    acc = accuracy_score(y_test, y_pred)
-    print(f"Accuracy: {acc}")
-
-
-def test_features():
-    dir1 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv"
-    df_train = pd.read_csv(dir1)
-
-    dir2 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA-SS.csv"
-    df_test = pd.read_csv(dir2)
-
-    x_train = df_train.drop(columns=['label'])
-    y_train = df_train['label']
-
-    x_test = df_test.drop(columns=['label'])
-    y_test = df_test['label']
-
-    mlp = MLPClassifier(max_iter=1000, random_state=41)
-
-    mlp.fit(x_train, y_train)
-
-    y_pred = mlp.predict(x_test)
-
-    acc = accuracy_score(y_test, y_pred)
-    print(f"Accuracy: {acc}")
 
 if __name__ == "__main__":
-    print("Hello World!")
-    # test()
-    # fine_tuning()
-    # assess_model()
-    test_features()
+    # dataset_type = "standard"
+    dataset_type = "feature"
+
+    if dataset_type == "standard":
+        x_train, x_test, y_train, y_test = get_standard_dataset()
+
+        test_model_basic(x_train, x_test, y_train, y_test, dataset_type)
+
+        # fine_tuning(x_train, y_train, dataset_type)
+
+        # assess_model(x_train, x_test, y_train, y_test)
+
+    elif dataset_type == "feature":
+        x_train, x_test, y_train, y_test = get_feature_dataset()
+
+        test_model_basic(x_train, x_test, y_train, y_test, dataset_type)
+
+        # fine_tuning(x_train, y_train, dataset_type)
+
+        # assess_model(x_train, x_test, y_train, y_test, dataset_type)

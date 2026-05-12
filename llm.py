@@ -11,6 +11,8 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
+from random_forest import save_results
+
 tokenizer = AutoTokenizer.from_pretrained("google/gemma-2b-it")
 model = AutoModelForCausalLM.from_pretrained("google/gemma-2b-it", device_map="auto") # pip install accelerate
 
@@ -456,8 +458,7 @@ def test():
     labels_unencoded = remap_labels(labels_enc, 'encode_to_label')
     print(labels_unencoded)
 
-    metrics = [0.5564, 0.1452, 0.6542, 0.9856]
-    save_results("test", metrics)
+
 
 if __name__ == "__main__":
     # test()
