@@ -139,8 +139,8 @@ if __name__ == "__main__":
     elif dataset_type == "feature":
         x_train, x_test, y_train, y_test = get_feature_dataset()
 
-        test_model_basic(x_train, x_test, y_train, y_test, dataset_type)
+        # test_model_basic(x_train, x_test, y_train, y_test, dataset_type)
 
         # fine_tuning(x_train, y_train, dataset_type)
 
-        # assess_model(x_train, x_test, y_train, y_test, dataset_type)
+        assess_model(x_train, x_test, y_train, y_test, dataset_type)
