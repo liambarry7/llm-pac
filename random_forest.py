@@ -132,9 +132,15 @@ def save_results(model_type, metrics):
         "f1-score": metrics[4]
     }
 
-    path = r"results\model_results.json"
-    with open(path, "r") as file:
-        model_rs = json.load(file)
+    if metrics[0] == "feature":
+        path = r"results/model_feature_results.json"
+        with open(path, "r") as file:
+            model_rs = json.load(file)
+
+    elif metrics[0] == "standard":
+        path = r"results/model_standard_results.json"
+        with open(path, "r") as file:
+            model_rs = json.load(file)
 
     model_rs['model_results'][model_type] = model_data
 
@@ -169,17 +175,17 @@ def generate_cm(y_test, y_pred, model_type, dataset_type):
 
 
 if __name__ == "__main__":
-    # dataset_type = "standard"
-    dataset_type = "feature"
+    dataset_type = "standard"
+    # dataset_type = "feature"
 
     if dataset_type == "standard":
         x_train, x_test, y_train, y_test = get_standard_dataset()
 
-        test_model_basic(x_train, x_test, y_train, y_test, dataset_type)
+        # test_model_basic(x_train, x_test, y_train, y_test, dataset_type)
 
         # fine_tuning(x_train, y_train, dataset_type)
 
-        # assess_model(x_train, x_test, y_train, y_test)
+        assess_model(x_train, x_test, y_train, y_test, dataset_type)
 
     elif dataset_type == "feature":
         x_train, x_test, y_train, y_test = get_feature_dataset()

@@ -14,7 +14,30 @@ participants = [f"P{i:03d}" for i in range(1, 152)]
 training_participants = participants[:120]
 test_participants = participants[120:]
 
+def label_annotation_mapping():
+    # use this function to create a new csv file for the
+    # annotation-label dictionary, with each value mapped to a corresponding number
+    dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\capture24\annotation-label-dictionary.csv"
 
+    label_df = pd.read_csv(dir)
+
+    print(label_df.head())
+    print(label_df.columns)
+    # print(label_df['label:WillettsSpecific2018'].value_counts())
+    print(label_df['label:Walmsley2020'].value_counts())
+
+    label_df = label_df[['annotation', 'label:Walmsley2020']].copy()
+    print(label_df.head())
+    print(label_df.columns)
+
+    label_df['encoded_label'] = label_df['label:Walmsley2020'].astype('category').cat.codes
+
+    # print label counts
+    print(label_df[['label:Walmsley2020', 'encoded_label']].value_counts())
+
+    # save as new csv for cross-reference when mapping labels for data
+    save_dir = r'data\annotation-label-encoded.csv'
+    label_df.to_csv(save_dir, mode='w', index=False)
 
 def preprocess_dir(subjects, output_dir):
     # function to loop through all raw csvs and preprocess their data
@@ -65,12 +88,13 @@ def preprocess_file(file, f_name, output_dir):
     df_na_dup = remove_na_dup(df)
 
     # map labels onto df
-    df_mapped = map_labels(df_na_dup)
+    df_clean = map_labels(df_na_dup)
 
     # remove unwanted labels
-    df_clean = remove_unwanted_labels(df_mapped, [8,9])
+    # df_clean = remove_unwanted_labels(df_mapped, [8,9])
 
     # feature engineering
+    feature_df = window_data(df_clean)
     feature_df = window_data(df_clean)
 
     print(feature_df.head())
@@ -80,7 +104,8 @@ def preprocess_file(file, f_name, output_dir):
     print(f"df shape: {feature_df.shape}")
 
     # save csv file (P001-S -> S for sampled)
-    dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data"
+    # dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data"
+    dir = r"data"
     feature_df.to_csv(f"{dir}\\{output_dir}\\{f_name}-F.csv", mode='w', index=False)
 
 
@@ -106,9 +131,10 @@ def remove_na_dup(df):
 def map_labels(df):
     # --- New label mapping ---
     print("\n-- Label Mapping --")
-    annotation_label_dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\annotation-label-encoded.csv"
+    # annotation_label_dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\annotation-label-encoded.csv"
+    annotation_label_dir = r"data\annotation-label-encoded.csv"
     label_df = pd.read_csv(annotation_label_dir)
-    print(label_df[['label:WillettsSpecific2018', 'encoded_label']].value_counts())
+    print(label_df[['label:Walmsley2020', 'encoded_label']].value_counts())
 
     # make into dict for mapping
     label_dict = label_df.set_index('annotation')['encoded_label']
@@ -121,13 +147,13 @@ def map_labels(df):
 
     return df
 
-def remove_unwanted_labels(df, labels):
-    # remove unwanted labels from df
-    print("\n-- Remove Labels --")
-    df = df.drop(df[df['label'].isin(labels)].index)
-    print(f"\nannotation + label + counts: \n {df[['annotation', 'label']].value_counts()}")
-
-    return df
+# def remove_unwanted_labels(df, labels):
+#     # remove unwanted labels from df
+#     print("\n-- Remove Labels --")
+#     df = df.drop(df[df['label'].isin(labels)].index)
+#     print(f"\nannotation + label + counts: \n {df[['annotation', 'label']].value_counts()}")
+#
+#     return df
 
 def window_data(df):
     windows = [] # list of rows (one per window)
@@ -172,6 +198,24 @@ def feature_extraction(window):
     # avg magnitude
     magnitude = np.sqrt(window['x']**2 + window['y']**2 + window['z']**2)
     features['magnitude_mean'] = magnitude.mean()
+    features['magnitude_std'] = magnitude.std()
+
+    # RMS magnitude
+    features['rms'] = np.sqrt(np.mean(magnitude**2))
+
+    # jerk
+    jerk = np.diff(magnitude)
+    features['jerk'] = np.mean(np.abs(jerk)) if len(jerk) > 0 else 0
+
+    # dominant frequency
+    features['dominant_freq'] = 0
+    fs = 100 # dataset sample rate (Hz)
+    if len(magnitude) > 4:
+        ffts_values = np.fft.rfft(magnitude - magnitude.mean())
+        fft_mag = np.abs(ffts_values)
+        freqs = np.fft.rfftfreq(len(magnitude), d=1/fs)
+        dominant_idx =  np.argmax(fft_mag[1:]) + 1
+        features['dominant_freq'] = freqs[dominant_idx]
 
     # get most common label
     features['label'] = window['label'].mode()[0]
@@ -187,12 +231,13 @@ def combine_data(dir):
     # data_dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\cleaned-data"
     # master_df = pd.DataFrame(columns=['time', 'x', 'y', 'z', 'annotation', 'label'])
 
-    data_dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data"
+    # data_dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data"
+    data_dir = r"data"
     selected_dir = os.path.join(data_dir, dir)
     print(selected_dir)
 
     master_df = pd.DataFrame(columns=['x_mean', 'y_mean', 'z_mean', 'x_std', 'y_std', 'z_std', 'x_min',
-     'y_min', 'z_min', 'x_max', 'y_max', 'z_max', 'magnitude_mean', 'label'])
+     'y_min', 'z_min', 'x_max', 'y_max', 'z_max', 'magnitude_mean', 'magnitude_std', 'rms', 'jerk', 'dominant_freq', 'label'])
 
     for f in os.scandir(selected_dir):
         if f.is_file():
@@ -210,14 +255,15 @@ def combine_data(dir):
 
     # save master df as csv
     if dir == "train":
-        master_df.to_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA.csv", mode='w', index=False)
+        # master_df.to_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA.csv", mode='w', index=False)
+        master_df.to_csv(r"data\TRAIN-DATA.csv", mode='w', index=False)
     elif dir == "test":
-        master_df.to_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA.csv", mode='w', index=False)
+        master_df.to_csv(r"data\TEST-DATA.csv", mode='w', index=False)
 
 def scale_and_sample_data():
     train_df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA.csv")
     test_df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA.csv")
-
+    
     scaler = StandardScaler()
 
     # separate labels from data
@@ -235,7 +281,7 @@ def scale_and_sample_data():
     train_scaled = pd.DataFrame(train_scaled, columns=x_train.columns)
     test_scaled = pd.DataFrame(test_scaled, columns=x_test.columns)
 
-    # readd labels
+    # read labels
     train_scaled['label'] = train_labels.values
     test_scaled['label'] = test_labels.values
 
@@ -250,6 +296,23 @@ def scale_and_sample_data():
     # save datasets - csv file (-SS for scaled + sampled)
     train_sampled.to_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv", mode = 'w', index = False)
     test_sampled.to_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA-SS.csv", mode = 'w', index = False)
+
+
+def llm_sample_data():
+    train_df = pd.read_csv(r"data\TRAIN-DATA.csv")
+    test_df = pd.read_csv(r"data\TEST-DATA.csv")
+
+    # sample datasets
+    target_size = 25000 # 25% of the size for ML
+    train_sampled = sample_dataset(train_df, int(target_size * 0.8), training=True)
+    test_sampled = sample_dataset(test_df, int(target_size * 0.2), training=False)
+
+    print(f"Training size: {train_sampled.shape}")
+    print(f"Testing size: {test_sampled.shape}")
+
+    # save datasets - csv file (-SS for scaled + sampled)
+    train_sampled.to_csv(r"data\TRAIN-DATA-LLM-SS.csv", mode='w', index=False)
+    test_sampled.to_csv(r"data\TEST-DATA-LLM-SS.csv", mode='w', index=False)
 
 def sample_dataset(df, sample_size, training):
     # return a sample from the df
@@ -288,18 +351,35 @@ def get_feature_dataset():
 
     return x_train, x_test, y_train, y_test
 
+def get_llm_dataset():
+    dir1 = r"data\TRAIN-DATA-LLM-SS.csv"
+    df_train = pd.read_csv(dir1)
+
+    dir2 = r"data\TEST-DATA-LLM-SS.csv"
+    df_test = pd.read_csv(dir2)
+
+    x_train = df_train.drop(columns=['label'])
+    y_train = df_train['label']
+
+    x_test = df_test.drop(columns=['label'])
+    y_test = df_test['label']
+
+    return x_train, x_test, y_train, y_test
+
 if __name__ == "__main__":
+    # label_annotation_mapping()
 
     # preprocess data, split into training and test
     # preprocess_dir(training_participants, "train")
     # preprocess_dir(test_participants, "test")
 
     # combine individual preprocessed csvs
-    # combine_data("train")
-    # combine_data("test")
+    combine_data("train")
+    combine_data("test")
 
     # scale data (normalise)
-    scale_and_sample_data()
+    # scale_and_sample_data()
+    llm_sample_data()
 
 
     # df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv")
