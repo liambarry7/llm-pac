@@ -175,8 +175,8 @@ def generate_cm(y_test, y_pred, model_type, dataset_type):
 
 
 if __name__ == "__main__":
-    dataset_type = "standard"
-    # dataset_type = "feature"
+    # dataset_type = "standard"
+    dataset_type = "feature"
 
     if dataset_type == "standard":
         x_train, x_test, y_train, y_test = get_standard_dataset()
@@ -194,4 +194,4 @@ if __name__ == "__main__":
 
         # fine_tuning(x_train, y_train, dataset_type)
 
-        assess_model(x_train, x_test, y_train, y_test, dataset_type)
+        # assess_model(x_train, x_test, y_train, y_test, dataset_type)

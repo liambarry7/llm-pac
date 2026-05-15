@@ -261,8 +261,10 @@ def combine_data(dir):
         master_df.to_csv(r"data\TEST-DATA.csv", mode='w', index=False)
 
 def scale_and_sample_data():
-    train_df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA.csv")
-    test_df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA.csv")
+    # train_df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA.csv")
+    # test_df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA.csv")
+    train_df = pd.read_csv(r"data\TRAIN-DATA.csv")
+    test_df = pd.read_csv(r"data\TEST-DATA.csv")
     
     scaler = StandardScaler()
 
@@ -294,8 +296,10 @@ def scale_and_sample_data():
     print(f"Testing size: {test_sampled.shape}")
 
     # save datasets - csv file (-SS for scaled + sampled)
-    train_sampled.to_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv", mode = 'w', index = False)
-    test_sampled.to_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA-SS.csv", mode = 'w', index = False)
+    # train_sampled.to_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv", mode = 'w', index = False)
+    # test_sampled.to_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA-SS.csv", mode = 'w', index = False)
+    train_sampled.to_csv(r"data\TRAIN-DATA-SS.csv", mode = 'w', index = False)
+    test_sampled.to_csv(r"data\TEST-DATA-SS.csv", mode = 'w', index = False)
 
 
 def llm_sample_data():
@@ -337,10 +341,12 @@ def sample_dataset(df, sample_size, training):
     return df_sample
 
 def get_feature_dataset():
-    dir1 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv"
+    # dir1 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv"
+    dir1 = r"data\TRAIN-DATA-SS.csv"
     df_train = pd.read_csv(dir1)
 
-    dir2 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA-SS.csv"
+    # dir2 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA-SS.csv"
+    dir2 = r"data\TEST-DATA-SS.csv"
     df_test = pd.read_csv(dir2)
 
     x_train = df_train.drop(columns=['label'])
@@ -374,12 +380,12 @@ if __name__ == "__main__":
     # preprocess_dir(test_participants, "test")
 
     # combine individual preprocessed csvs
-    combine_data("train")
-    combine_data("test")
+    # combine_data("train")
+    # combine_data("test")
 
     # scale data (normalise)
-    # scale_and_sample_data()
-    llm_sample_data()
+    scale_and_sample_data()
+    # llm_sample_data()
 
 
     # df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv")
