@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig # pip install torch transformers accelerate bitsandbytes
 
 # from llm import remap_labels
-from random_forest import save_results
+from random_forest import save_results, generate_cm
 from feature_preprocessing import get_feature_dataset, get_llm_dataset
 from standard_preprocessing import get_standard_dataset
 
@@ -35,7 +35,7 @@ model = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=confi
 
 # activities = ["sleep", "sitting", "walking", "bicycling", "mixed-activity", "standing", "manual-work", "sports"]
 
-run_lim = 20
+run_lim = 10
 
 
 def test_llm():
@@ -79,7 +79,7 @@ def zero_shot_prompting(x_test, y_test):
                     magnitude-mean = {x_test.iloc[i]['magnitude_mean']:.2f}, magnitude-std = {x_test.iloc[i]['magnitude_std']:.2f}
                     rms = {x_test.iloc[i]['rms']:.2f}, jerk = {x_test.iloc[i]['jerk']:.2f}, dominant frequency = {x_test.iloc[i]['dominant_freq']:.2f}
                     
-                    Return only the single best activity.
+                    Return only the single best activity and confidence score (between 0-1).
                     
                     Answer:
                 """
@@ -118,6 +118,9 @@ def zero_shot_prompting(x_test, y_test):
     model_data = [acc, prec, recall, f1]
 
     save_results(model_type, "assess", model_data)
+
+    # create confusion matrix
+    generate_cm(y_test[:len(pred_labels_encoded)], pred_labels_encoded, "zero-shot")
 
 
 def few_shot_prompting(x_train, y_train, x_test, y_test):
@@ -233,7 +236,8 @@ def few_shot_prompting(x_train, y_train, x_test, y_test):
 
     save_results(model_type, "assess", model_data)
 
-
+    # create confusion matrix
+    generate_cm(y_test[:len(pred_labels_encoded)], pred_labels_encoded, "few-shot")
 
 def extract_label(response):
     if "Answer:" in response:
@@ -267,7 +271,7 @@ def remap_labels(label_list, direction):
 
     # get all unique pairs
     labels = label_df[['label:Walmsley2020', 'encoded_label']].drop_duplicates().reset_index(drop=True)
-    print(labels)
+    # print(labels)
 
     if direction == "label_to_encode":
         mapping = dict(zip(
@@ -289,43 +293,10 @@ if __name__ == "__main__":
     # test_llm()
     remap_labels([0,1,2,3], "encode_to_label")
 
+    x_train, x_test, y_train, y_test = get_llm_dataset()
 
-    # # dataset_type = "standard"
-    # dataset_type = "feature"
-    #
-    # if dataset_type == "standard":
-    #     x_train, x_test, y_train, y_test = get_standard_dataset()
-    #
-    #
-    #
-    # elif dataset_type == "feature":
-    #     # x_train, x_test, y_train, y_test = get_feature_dataset()
-    #     x_train, x_test, y_train, y_test = get_llm_dataset()
-    #
-    #     # sample_training_data(x_train, y_train)
-    #
-    #     zero_shot_prompting(x_test, y_test, dataset_type)
-    #     few_shot_prompting(x_train, y_train, x_test, y_test, dataset_type)
+    # sample_training_data(x_train, y_train)
 
+    zero_shot_prompting(x_test, y_test)
+    few_shot_prompting(x_train, y_train, x_test, y_test)
 
-
-# zero_template = f"""
-#                     Context:
-#                     You are an expert in Physical Activity Classification.
-#                     The data was recorded from Axivity AX3 wrist-worn tri-axial accelerometer on their dominant hand.
-#                     The accelerometer was set to capture tri-axial acceleration data at 100 Hz with a dynamic range of ±8g.
-#                     Wearable cameras were used to collect ground truths of the participants’ activities while wearing the accelerometers.
-#                     Participants were given an OMG Life Autographer, a wearable camera worn around the neck which automatically takes photographs every 20 - 40 seconds
-#
-#                     Labels: {', '.join(activities)}
-#                     Data:
-#                         x-mean = {x_test.iloc[i]['x_mean']}, y-mean = {x_test.iloc[i]['y_mean']}, z-mean = {x_test.iloc[i]['z_mean']}
-#                         x-std = {x_test.iloc[i]['x_std']}, y-std = {x_test.iloc[i]['y_std']}, z-std = {x_test.iloc[i]['z_std']}
-#                         x-min = {x_test.iloc[i]['x_min']}, y-min = {x_test.iloc[i]['y_min']}, z-min = {x_test.iloc[i]['z_min']}
-#                         x-max = {x_test.iloc[i]['x_max']}, y-max = {x_test.iloc[i]['y_max']}, z-max = {x_test.iloc[i]['z_max']}
-#                         magnitude-mean = {x_test.iloc[i]['magnitude_mean']}
-#                     Question: Which activity from the options above best matches the data?
-#                     Answer:
-#                 """
-#
-# few_template = 0

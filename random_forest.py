@@ -152,19 +152,7 @@ def save_results(model_type, results_type, metrics):
 
 
 def generate_cm(y_test, y_pred, model_type):
-    # remap labels
-    # labels = ["sleep", "sitting", "walking", "bicycling", "mixed-activity", "standing", "manual-work", "sports"]
     labels = ["light", "moderate-vigorous", "sedentary", "sleep"] # 0, 1, 2, 3
-
-    # cm = confusion_matrix(y_test, y_pred)
-    #
-    # plt.figure(figsize=(12, 10))
-    # sns.heatmap(cm, annot=True, fmt="d", cmap="viridis", xticklabels=labels, yticklabels=labels)
-    # plt.xlabel("Predicted")
-    # plt.ylabel("True")
-    # plt.title(f"{model_type} Confusion Matrix ({dataset_type})")
-    # plt.savefig(f"graphs\\{model_type}_{dataset_type}_cm.png")
-    # plt.show()
 
     cm = confusion_matrix(y_test, y_pred)
     cm = cm.astype(float) / cm.sum(axis=1)[:, np.newaxis]
@@ -178,12 +166,27 @@ def generate_cm(y_test, y_pred, model_type):
     plt.show()
 
 
+def metric_comparison(y_test, y_pred, model_type):
+    # bar chart of all metrics
+    pass
+
+
+def class_comparison(y_test, y_pred, model_type):
+    # per-class precision, recall, f1-score bar chart
+    # 2x2 grid
+    pass
+
+
+def predict_class_distribution(y_pred, model_type):
+    # bar chart of predicted label distribution
+    pass
+
 if __name__ == "__main__":
 
     x_train, x_test, y_train, y_test = get_feature_dataset()
 
-    test_model_basic(x_train, x_test, y_train, y_test)
+    # test_model_basic(x_train, x_test, y_train, y_test)
 
-    # fine_tuning(x_train, y_train)
+    fine_tuning(x_train, y_train)
 
-    # assess_model(x_train, x_test, y_train, y_test)
+    assess_model(x_train, x_test, y_train, y_test)
