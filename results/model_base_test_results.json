@@ -1,0 +1,28 @@
+{
+    "model_results": {
+        "Random Forest - TEST": {
+            "accuracy": 0.7318,
+            "precision": 0.7386541702738237,
+            "recall": 0.7318,
+            "f1-score": 0.7340207470327227
+        },
+        "kNN - TEST": {
+            "accuracy": 0.62665,
+            "precision": 0.6443207577160615,
+            "recall": 0.62665,
+            "f1-score": 0.6298754754580247
+        },
+        "XGB - TEST": {
+            "accuracy": 0.7402,
+            "precision": 0.746300203970169,
+            "recall": 0.7402,
+            "f1-score": 0.7419479391357883
+        },
+        "MLP - TEST": {
+            "accuracy": 0.7489,
+            "precision": 0.7579466756424439,
+            "recall": 0.7489,
+            "f1-score": 0.7496135013984208
+        }
+    }
+}

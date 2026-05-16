@@ -11,7 +11,8 @@ from standard_preprocessing import get_standard_dataset
 from feature_preprocessing import get_feature_dataset
 
 
-def test_model_basic(x_train, x_test, y_train, y_test, dataset_type):
+def test_model_basic(x_train, x_test, y_train, y_test):
+    print("\nTesting basic XGBoost model...")
     xgb = XGBClassifier()
     xgb.fit(x_train, y_train)
 
@@ -29,14 +30,16 @@ def test_model_basic(x_train, x_test, y_train, y_test, dataset_type):
 
     # record results
     model_type = "XGB - TEST"
-    model_data = [dataset_type, acc, prec, recall, f1]
-    save_results(model_type, model_data)
+    model_data = [acc, prec, recall, f1]
+    save_results(model_type, "base-test", model_data)
 
     # generate confusion matrix
-    generate_cm(y_test, y_pred, "TEST-XGB", dataset_type)
+    generate_cm(y_test, y_pred, "TEST-XGB")
 
 
-def fine_tuning(x_train, y_train, dataset_type):
+def fine_tuning(x_train, y_train):
+    print("\nFine-tuning XGBoost model...")
+
     # create rf model with no params
     xgb = XGBClassifier()
 
@@ -69,9 +72,9 @@ def fine_tuning(x_train, y_train, dataset_type):
          'std_test_score', 'rank_test_score']].sort_values(by='rank_test_score')
     print(results_df.head())
 
-    results_df.to_csv(f'results\\xgb_fine_tune_results_{dataset_type}.csv', index=False)
+    results_df.to_csv(f'results\\xgb_fine_tune_results.csv', index=False)
 
-def assess_model(x_train, x_test, y_train, y_test, dataset_type):
+def assess_model(x_train, x_test, y_train, y_test):
     """
     1. get best model params
     2. feed them into model
@@ -79,9 +82,11 @@ def assess_model(x_train, x_test, y_train, y_test, dataset_type):
     4. test model
     5. record performance
     """
+    print("\nAssessing XGBoost model...")
+
 
     # get best params
-    dir = f"results\\xgb_fine_tune_results_{dataset_type}.csv"
+    dir = f"results\\xgb_fine_tune_results.csv"
     df = pd.read_csv(dir)
     optimal_params = df[['param_max_depth', 'param_learning_rate', 'param_n_estimators', 'param_colsample_bytree']].iloc[0]
     params = optimal_params.to_list()
@@ -103,13 +108,13 @@ def assess_model(x_train, x_test, y_train, y_test, dataset_type):
     print(f"F1-score: {f1 * 100:.2f}%")
 
     # record results
-    model_type = "XGBoost"
-    model_data = [dataset_type, acc, prec, recall, f1]
+    model_type = "XGB"
+    model_data = [acc, prec, recall, f1]
 
-    save_results(model_type, model_data)
+    save_results(model_type, "assess", model_data)
 
     # create confusion matrix
-    generate_cm(y_test, y_pred, "xgb", dataset_type)
+    generate_cm(y_test, y_pred, "xgb")
 
     # save model
     with open(f'models\\xgb.pkl', 'wb') as file:
@@ -117,23 +122,10 @@ def assess_model(x_train, x_test, y_train, y_test, dataset_type):
 
 
 if __name__ == "__main__":
-    # dataset_type = "standard"
-    dataset_type = "feature"
+    x_train, x_test, y_train, y_test = get_feature_dataset()
 
-    if dataset_type == "standard":
-        x_train, x_test, y_train, y_test = get_standard_dataset()
+    test_model_basic(x_train, x_test, y_train, y_test)
 
-        test_model_basic(x_train, x_test, y_train, y_test, dataset_type)
+    # fine_tuning(x_train, y_train)
 
-        # fine_tuning(x_train, y_train, dataset_type)
-
-        # assess_model(x_train, x_test, y_train, y_test)
-
-    elif dataset_type == "feature":
-        x_train, x_test, y_train, y_test = get_feature_dataset()
-
-        test_model_basic(x_train, x_test, y_train, y_test, dataset_type)
-
-        # fine_tuning(x_train, y_train, dataset_type)
-
-        # assess_model(x_train, x_test, y_train, y_test, dataset_type)
+    # assess_model(x_train, x_test, y_train, y_test)

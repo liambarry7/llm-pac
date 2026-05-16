@@ -14,7 +14,8 @@ import seaborn as sns
 from standard_preprocessing import get_standard_dataset
 from feature_preprocessing import get_feature_dataset
 
-def test_model_basic(x_train, x_test, y_train, y_test, dataset_type):
+def test_model_basic(x_train, x_test, y_train, y_test):
+    print("\nTesting basic Random Forest model...")
     rf = RandomForestClassifier()
     rf.fit(x_train, y_train)
 
@@ -31,15 +32,17 @@ def test_model_basic(x_train, x_test, y_train, y_test, dataset_type):
     print(f"F1-score: {f1 * 100:.2f}%")
 
     # record results
-    model_type = "Random Forest - TEST"
-    model_data = [dataset_type, acc, prec, recall, f1]
-    save_results(model_type, model_data)
+    model_type = "RF - TEST"
+    model_data = [acc, prec, recall, f1]
+    save_results(model_type, "base-test", model_data)
 
     # generate confusion matrix
-    generate_cm(y_test, y_pred, "TEST-RF", dataset_type)
+    generate_cm(y_test, y_pred, "TEST-RF")
 
 
-def fine_tuning(x_train, y_train, dataset_type):
+def fine_tuning(x_train, y_train):
+    print("\nFine-tuning Random Forest model...")
+
     # create rf model with no params
     rf = RandomForestClassifier(random_state=42)
 
@@ -72,10 +75,10 @@ def fine_tuning(x_train, y_train, dataset_type):
          'std_test_score', 'rank_test_score']].sort_values(by='rank_test_score')
     print(results_df.head())
 
-    results_df.to_csv(f'results\\rf_fine_tune_results_{dataset_type}.csv', index=False)
+    results_df.to_csv(f'results\\rf_fine_tune_results.csv', index=False)
 
 
-def assess_model(x_train, x_test, y_train, y_test, dataset_type):
+def assess_model(x_train, x_test, y_train, y_test):
     """
     1. get best model params
     2. feed them into model
@@ -83,9 +86,10 @@ def assess_model(x_train, x_test, y_train, y_test, dataset_type):
     4. test model
     5. record performance
     """
+    print("\nAssessing Random Forest model...")
 
     # get best params
-    dir = f"results\\rf_fine_tune_results_{dataset_type}.csv"
+    dir = f"results\\rf_fine_tune_results.csv"
     df = pd.read_csv(dir)
     optimal_params = df[['param_n_estimators', 'param_max_depth', 'param_min_samples_leaf', 'param_min_samples_split']].iloc[0]
     params = optimal_params.to_list()
@@ -110,35 +114,34 @@ def assess_model(x_train, x_test, y_train, y_test, dataset_type):
     print(f"F1-score: {f1 * 100:.2f}%")
 
     # record results
-    model_type = "Random Forest"
-    model_data = [dataset_type, acc, prec, recall, f1]
+    model_type = "RF"
+    model_data = [acc, prec, recall, f1]
 
-    save_results(model_type, model_data)
+    save_results(model_type, "assess", model_data)
 
     # create confusion matrix
-    generate_cm(y_test, y_pred, "rf", dataset_type)
+    generate_cm(y_test, y_pred, "rf")
 
     # save model
     with open(f'models\\rf.pkl', 'wb') as file:
         pickle.dump(rf, file)
 
 
-def save_results(model_type, metrics):
+def save_results(model_type, results_type, metrics):
     model_data = {
-        "dataset": metrics[0],
-        "accuracy": metrics[1],
-        "precision": metrics[2],
-        "recall": metrics[3],
-        "f1-score": metrics[4]
+        "accuracy": metrics[0],
+        "precision": metrics[1],
+        "recall": metrics[2],
+        "f1-score": metrics[3]
     }
 
-    if metrics[0] == "feature":
-        path = r"results/model_feature_results.json"
+    if results_type == "assess":
+        path = r"results/model_results.json"
         with open(path, "r") as file:
             model_rs = json.load(file)
 
-    elif metrics[0] == "standard":
-        path = r"results/model_standard_results.json"
+    elif results_type == "base-test":
+        path = r"results/model_base_test_results.json"
         with open(path, "r") as file:
             model_rs = json.load(file)
 
@@ -148,9 +151,10 @@ def save_results(model_type, metrics):
         json.dump(model_rs, file, indent=4)
 
 
-def generate_cm(y_test, y_pred, model_type, dataset_type):
+def generate_cm(y_test, y_pred, model_type):
     # remap labels
-    labels = ["sleep", "sitting", "walking", "bicycling", "mixed-activity", "standing", "manual-work", "sports"]
+    # labels = ["sleep", "sitting", "walking", "bicycling", "mixed-activity", "standing", "manual-work", "sports"]
+    labels = ["light", "moderate-vigorous", "sedentary", "sleep"] # 0, 1, 2, 3
 
     # cm = confusion_matrix(y_test, y_pred)
     #
@@ -169,29 +173,17 @@ def generate_cm(y_test, y_pred, model_type, dataset_type):
     sns.heatmap(cm, annot=True, fmt=".1%", cmap="viridis", xticklabels=labels, yticklabels=labels)
     plt.xlabel("Predicted")
     plt.ylabel("True")
-    plt.title(f"{model_type} Confusion Matrix ({dataset_type})")
-    plt.savefig(f"graphs\\{model_type}_{dataset_type}_cm.png")
+    plt.title(f"{model_type} Confusion Matrix")
+    plt.savefig(f"graphs\\{model_type}_cm.png")
     plt.show()
 
 
 if __name__ == "__main__":
-    # dataset_type = "standard"
-    dataset_type = "feature"
 
-    if dataset_type == "standard":
-        x_train, x_test, y_train, y_test = get_standard_dataset()
+    x_train, x_test, y_train, y_test = get_feature_dataset()
 
-        # test_model_basic(x_train, x_test, y_train, y_test, dataset_type)
+    test_model_basic(x_train, x_test, y_train, y_test)
 
-        # fine_tuning(x_train, y_train, dataset_type)
+    # fine_tuning(x_train, y_train)
 
-        assess_model(x_train, x_test, y_train, y_test, dataset_type)
-
-    elif dataset_type == "feature":
-        x_train, x_test, y_train, y_test = get_feature_dataset()
-
-        test_model_basic(x_train, x_test, y_train, y_test, dataset_type)
-
-        # fine_tuning(x_train, y_train, dataset_type)
-
-        # assess_model(x_train, x_test, y_train, y_test, dataset_type)
+    # assess_model(x_train, x_test, y_train, y_test)

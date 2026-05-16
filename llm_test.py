@@ -51,7 +51,7 @@ def test_llm():
     response = tokenizer.decode(outputs[0], skip_special_tokens=True)
     print(response)
 
-def zero_shot_prompting(x_test, y_test, dataset_type):
+def zero_shot_prompting(x_test, y_test):
 
     y_unencoded = remap_labels(y_test, "encode_to_label")
     pred_labels = []
@@ -115,12 +115,12 @@ def zero_shot_prompting(x_test, y_test, dataset_type):
 
     # record results
     model_type = "Zero-shot Prompting"
-    model_data = [dataset_type, acc, prec, recall, f1]
+    model_data = [acc, prec, recall, f1]
 
-    save_results(model_type, model_data)
+    save_results(model_type, "assess", model_data)
 
 
-def few_shot_prompting(x_train, y_train, x_test, y_test, dataset_type):
+def few_shot_prompting(x_train, y_train, x_test, y_test):
     y_unencoded = remap_labels(y_test, "encode_to_label")
     pred_labels = []
 
@@ -229,9 +229,9 @@ def few_shot_prompting(x_train, y_train, x_test, y_test, dataset_type):
 
     # record results
     model_type = "Few-shot Prompting"
-    model_data = [dataset_type, acc, prec, recall, f1]
+    model_data = [acc, prec, recall, f1]
 
-    save_results(model_type, model_data)
+    save_results(model_type, "assess", model_data)
 
 
 
@@ -267,7 +267,7 @@ def remap_labels(label_list, direction):
 
     # get all unique pairs
     labels = label_df[['label:Walmsley2020', 'encoded_label']].drop_duplicates().reset_index(drop=True)
-    # print(labels)
+    print(labels)
 
     if direction == "label_to_encode":
         mapping = dict(zip(
@@ -287,23 +287,25 @@ def remap_labels(label_list, direction):
 
 if __name__ == "__main__":
     # test_llm()
-
-    # dataset_type = "standard"
-    dataset_type = "feature"
-
-    if dataset_type == "standard":
-        x_train, x_test, y_train, y_test = get_standard_dataset()
+    remap_labels([0,1,2,3], "encode_to_label")
 
 
-
-    elif dataset_type == "feature":
-        # x_train, x_test, y_train, y_test = get_feature_dataset()
-        x_train, x_test, y_train, y_test = get_llm_dataset()
-
-        # sample_training_data(x_train, y_train)
-
-        zero_shot_prompting(x_test, y_test, dataset_type)
-        few_shot_prompting(x_train, y_train, x_test, y_test, dataset_type)
+    # # dataset_type = "standard"
+    # dataset_type = "feature"
+    #
+    # if dataset_type == "standard":
+    #     x_train, x_test, y_train, y_test = get_standard_dataset()
+    #
+    #
+    #
+    # elif dataset_type == "feature":
+    #     # x_train, x_test, y_train, y_test = get_feature_dataset()
+    #     x_train, x_test, y_train, y_test = get_llm_dataset()
+    #
+    #     # sample_training_data(x_train, y_train)
+    #
+    #     zero_shot_prompting(x_test, y_test, dataset_type)
+    #     few_shot_prompting(x_train, y_train, x_test, y_test, dataset_type)
 
 
 
