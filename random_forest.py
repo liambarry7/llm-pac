@@ -4,6 +4,7 @@ import sys
 
 import pandas as pd
 import numpy as np
+from collections import Counter
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score, confusion_matrix, ConfusionMatrixDisplay
@@ -119,8 +120,20 @@ def assess_model(x_train, x_test, y_train, y_test):
 
     save_results(model_type, "assess", model_data)
 
-    # create confusion matrix
-    generate_cm(y_test, y_pred, "rf")
+    # # create confusion matrix
+    # generate_cm(y_test, y_pred, model_type)
+    #
+    # # metric comparison graph
+    metric_comparison(model_data, model_type)
+
+    report = classification_report(y_test, y_pred, target_names=["light", "moderate-vigorous", "sedentary", "sleep"], output_dict=True)
+    print(report)
+
+    # class comparison graph
+    class_comparison(report, model_type)
+
+    # predicted class distribution graph
+    # predict_class_distribution()
 
     # save model
     with open(f'models\\rf.pkl', 'wb') as file:
@@ -166,19 +179,62 @@ def generate_cm(y_test, y_pred, model_type):
     plt.show()
 
 
-def metric_comparison(y_test, y_pred, model_type):
+def metric_comparison(model_data, model_type):
     # bar chart of all metrics
-    pass
+    print(model_data)
+    metrics = ["Accuracy", "Precision", "Recall", "F1-score"]
+    # colours = ["#6ac1cc", "#6e28a1", "#82d622", "#d6a622"]
+    colours = ["#b3cde3", "#6497b1", "#005b96", "#03396c"]
+
+    bars = plt.bar(metrics, model_data, color=colours)
+    plt.bar_label(bars, fmt="%.3f")
+    plt.title(f"{model_type} Metric Comparison")
+    plt.xlabel("Metrics")
+    plt.ylabel("Score")
+    plt.ylim(0, 1)
+    plt.savefig(f"graphs\\{model_type}_mc")
+    plt.show()
 
 
-def class_comparison(y_test, y_pred, model_type):
+def class_comparison(cr, model_type):
     # per-class precision, recall, f1-score bar chart
     # 2x2 grid
-    pass
+
+    labels = ["light", "moderate-vigorous", "sedentary", "sleep"]
+    metrics = ["Precision", "Recall", "F1-score"]
+    colours = ["#6497b1", "#005b96", "#03396c"]
+    # colours = ["#6e28a1", "#82d622", "#d6a622"]
+
+    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+    for idx, l in enumerate(labels):
+        i = idx // 2
+        j = idx % 2
+
+        p = cr[l]['precision']
+        r = cr[l]['recall']
+        f = cr[l]['f1-score']
+
+        data = [p, r, f]
+        bars = axes[i, j].bar(metrics, data, color=colours)
+        axes[i, j].bar_label(bars, fmt="%.3f")
+        axes[i, j].set_title(l)
+        axes[i, j].set_ylabel("Score")
+        axes[i, j].set_xlabel("Metric")
+        axes[i, j].set_ylim(0, 1)
+
+    fig.suptitle(f"{model_type} Class Comparison")
+    plt.tight_layout()
+    plt.savefig(f"graphs\\{model_type}_cc")
+    plt.show()
+
 
 
 def predict_class_distribution(y_pred, model_type):
     # bar chart of predicted label distribution
+
+    label_counts = Counter(y_pred)
+
     pass
 
 if __name__ == "__main__":
@@ -187,6 +243,6 @@ if __name__ == "__main__":
 
     # test_model_basic(x_train, x_test, y_train, y_test)
 
-    fine_tuning(x_train, y_train)
+    # fine_tuning(x_train, y_train)
 
     assess_model(x_train, x_test, y_train, y_test)
