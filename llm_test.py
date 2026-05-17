@@ -13,9 +13,8 @@ from sklearn.model_selection import train_test_split
 
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig # pip install torch transformers accelerate bitsandbytes
 
-# from llm import remap_labels
-from random_forest import save_results, generate_cm
-from feature_preprocessing import get_feature_dataset, get_llm_dataset
+from model_analysis import save_results, generate_cm, metric_comparison, class_comparison, predict_class_distribution
+from feature_preprocessing import get_feature_dataset, get_llm_dataset, remap_labels
 from standard_preprocessing import get_standard_dataset
 
 model_id = "google/gemma-2b-it"
@@ -264,30 +263,7 @@ def sample_training_data(x_train, y_train):
     # print(sample_df)
     return sample_df
 
-def remap_labels(label_list, direction):
-    # --- New label mapping ---
-    annotation_label_dir = r"data\annotation-label-encoded.csv"
-    label_df = pd.read_csv(annotation_label_dir)
 
-    # get all unique pairs
-    labels = label_df[['label:Walmsley2020', 'encoded_label']].drop_duplicates().reset_index(drop=True)
-    # print(labels)
-
-    if direction == "label_to_encode":
-        mapping = dict(zip(
-            labels["label:Walmsley2020"],
-            labels["encoded_label"]
-        ))
-
-        return [mapping.get(label, None) for label in label_list]
-
-    elif direction == "encode_to_label":
-        mapping = dict(zip(
-            labels["encoded_label"],
-            labels["label:Walmsley2020"]
-        ))
-
-        return [mapping.get(code, None) for code in label_list]
 
 if __name__ == "__main__":
     # test_llm()

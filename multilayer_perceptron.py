@@ -1,13 +1,11 @@
 import pickle
+import pandas as pd
 
 from sklearn.neural_network import MLPClassifier
-import pandas as pd
 from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score
-from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
+from sklearn.model_selection import StratifiedKFold, GridSearchCV
 
-from random_forest import save_results, generate_cm
-
-from standard_preprocessing import get_standard_dataset
+from model_analysis import save_results, generate_cm, metric_comparison, class_comparison, predict_class_distribution
 from feature_preprocessing import get_feature_dataset
 
 
@@ -115,8 +113,12 @@ def assess_model(x_train, x_test, y_train, y_test):
 
     save_results(model_type, "assess", model_data)
 
-    # create confusion matrix
-    generate_cm(y_test, y_pred, "mlp")
+    # Create graphs for analysis
+    generate_cm(y_test, y_pred, model_type)
+    metric_comparison(model_data, model_type)
+    class_report = classification_report(y_test, y_pred, target_names=["light", "moderate-vigorous", "sedentary", "sleep"], output_dict=True)
+    class_comparison(class_report, model_type)
+    predict_class_distribution(y_pred, model_type)
 
     # save model
     with open(f'models\\mlp.pkl', 'wb') as file:
@@ -128,6 +130,6 @@ if __name__ == "__main__":
 
     # test_model_basic(x_train, x_test, y_train, y_test)
 
-    fine_tuning(x_train, y_train)
+    # fine_tuning(x_train, y_train)
 
-    # assess_model(x_train, x_test, y_train, y_test)
+    assess_model(x_train, x_test, y_train, y_test)

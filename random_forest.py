@@ -1,19 +1,13 @@
-import json
 import pickle
-import sys
-
 import pandas as pd
-import numpy as np
-from collections import Counter
 
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score, confusion_matrix, ConfusionMatrixDisplay
-from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
-import matplotlib.pyplot as plt
-import seaborn as sns
+from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score
+from sklearn.model_selection import StratifiedKFold, GridSearchCV
 
-from standard_preprocessing import get_standard_dataset
 from feature_preprocessing import get_feature_dataset
+from model_analysis import save_results, generate_cm, metric_comparison, class_comparison, predict_class_distribution
+
 
 def test_model_basic(x_train, x_test, y_train, y_test):
     print("\nTesting basic Random Forest model...")
@@ -120,122 +114,18 @@ def assess_model(x_train, x_test, y_train, y_test):
 
     save_results(model_type, "assess", model_data)
 
-    # # create confusion matrix
-    # generate_cm(y_test, y_pred, model_type)
-    #
-    # # metric comparison graph
+    # Create graphs for analysis
+    generate_cm(y_test, y_pred, model_type)
     metric_comparison(model_data, model_type)
+    class_report = classification_report(y_test, y_pred, target_names=["light", "moderate-vigorous", "sedentary", "sleep"], output_dict=True)
+    class_comparison(class_report, model_type)
+    predict_class_distribution(y_pred, model_type)
 
-    report = classification_report(y_test, y_pred, target_names=["light", "moderate-vigorous", "sedentary", "sleep"], output_dict=True)
-    print(report)
-
-    # class comparison graph
-    class_comparison(report, model_type)
-
-    # predicted class distribution graph
-    # predict_class_distribution()
 
     # save model
     with open(f'models\\rf.pkl', 'wb') as file:
         pickle.dump(rf, file)
 
-
-def save_results(model_type, results_type, metrics):
-    model_data = {
-        "accuracy": metrics[0],
-        "precision": metrics[1],
-        "recall": metrics[2],
-        "f1-score": metrics[3]
-    }
-
-    if results_type == "assess":
-        path = r"results/model_results.json"
-        with open(path, "r") as file:
-            model_rs = json.load(file)
-
-    elif results_type == "base-test":
-        path = r"results/model_base_test_results.json"
-        with open(path, "r") as file:
-            model_rs = json.load(file)
-
-    model_rs['model_results'][model_type] = model_data
-
-    with open(path, "w") as file:
-        json.dump(model_rs, file, indent=4)
-
-
-def generate_cm(y_test, y_pred, model_type):
-    labels = ["light", "moderate-vigorous", "sedentary", "sleep"] # 0, 1, 2, 3
-
-    cm = confusion_matrix(y_test, y_pred)
-    cm = cm.astype(float) / cm.sum(axis=1)[:, np.newaxis]
-
-    plt.figure(figsize=(12, 10))
-    sns.heatmap(cm, annot=True, fmt=".1%", cmap="viridis", xticklabels=labels, yticklabels=labels)
-    plt.xlabel("Predicted")
-    plt.ylabel("True")
-    plt.title(f"{model_type} Confusion Matrix")
-    plt.savefig(f"graphs\\{model_type}_cm.png")
-    plt.show()
-
-
-def metric_comparison(model_data, model_type):
-    # bar chart of all metrics
-    print(model_data)
-    metrics = ["Accuracy", "Precision", "Recall", "F1-score"]
-    # colours = ["#6ac1cc", "#6e28a1", "#82d622", "#d6a622"]
-    colours = ["#b3cde3", "#6497b1", "#005b96", "#03396c"]
-
-    bars = plt.bar(metrics, model_data, color=colours)
-    plt.bar_label(bars, fmt="%.3f")
-    plt.title(f"{model_type} Metric Comparison")
-    plt.xlabel("Metrics")
-    plt.ylabel("Score")
-    plt.ylim(0, 1)
-    plt.savefig(f"graphs\\{model_type}_mc")
-    plt.show()
-
-
-def class_comparison(cr, model_type):
-    # per-class precision, recall, f1-score bar chart
-    # 2x2 grid
-
-    labels = ["light", "moderate-vigorous", "sedentary", "sleep"]
-    metrics = ["Precision", "Recall", "F1-score"]
-    colours = ["#6497b1", "#005b96", "#03396c"]
-    # colours = ["#6e28a1", "#82d622", "#d6a622"]
-
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-
-    for idx, l in enumerate(labels):
-        i = idx // 2
-        j = idx % 2
-
-        p = cr[l]['precision']
-        r = cr[l]['recall']
-        f = cr[l]['f1-score']
-
-        data = [p, r, f]
-        bars = axes[i, j].bar(metrics, data, color=colours)
-        axes[i, j].bar_label(bars, fmt="%.3f")
-        axes[i, j].set_title(l)
-        axes[i, j].set_ylabel("Score")
-        axes[i, j].set_xlabel("Metric")
-        axes[i, j].set_ylim(0, 1)
-
-    fig.suptitle(f"{model_type} Class Comparison")
-    plt.tight_layout()
-    plt.savefig(f"graphs\\{model_type}_cc")
-    plt.show()
-
-
-
-def predict_class_distribution(y_pred, model_type):
-    # bar chart of predicted label distribution
-
-    label_counts = Counter(y_pred)
-
-    pass
 
 if __name__ == "__main__":
 

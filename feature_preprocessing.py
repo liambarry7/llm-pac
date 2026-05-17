@@ -1,13 +1,8 @@
-from statistics import mode
-
 import pandas as pd
 import numpy as np
-
 import os
 
 from sklearn.preprocessing import StandardScaler
-
-
 
 # create split of train and test participants
 participants = [f"P{i:03d}" for i in range(1, 152)]
@@ -23,7 +18,6 @@ def label_annotation_mapping():
 
     print(label_df.head())
     print(label_df.columns)
-    # print(label_df['label:WillettsSpecific2018'].value_counts())
     print(label_df['label:Walmsley2020'].value_counts())
 
     label_df = label_df[['annotation', 'label:Walmsley2020']].copy()
@@ -90,11 +84,7 @@ def preprocess_file(file, f_name, output_dir):
     # map labels onto df
     df_clean = map_labels(df_na_dup)
 
-    # remove unwanted labels
-    # df_clean = remove_unwanted_labels(df_mapped, [8,9])
-
     # feature engineering
-    feature_df = window_data(df_clean)
     feature_df = window_data(df_clean)
 
     print(feature_df.head())
@@ -147,13 +137,6 @@ def map_labels(df):
 
     return df
 
-# def remove_unwanted_labels(df, labels):
-#     # remove unwanted labels from df
-#     print("\n-- Remove Labels --")
-#     df = df.drop(df[df['label'].isin(labels)].index)
-#     print(f"\nannotation + label + counts: \n {df[['annotation', 'label']].value_counts()}")
-#
-#     return df
 
 def window_data(df):
     windows = [] # list of rows (one per window)
@@ -372,6 +355,30 @@ def get_llm_dataset():
 
     return x_train, x_test, y_train, y_test
 
+def remap_labels(label_list, direction):
+    # --- New label mapping ---
+    annotation_label_dir = r"data\annotation-label-encoded.csv"
+    label_df = pd.read_csv(annotation_label_dir)
+
+    # get all unique pairs
+    labels = label_df[['label:Walmsley2020', 'encoded_label']].drop_duplicates().reset_index(drop=True)
+    # print(labels)
+
+    if direction == "label_to_encode":
+        mapping = dict(zip(
+            labels["label:Walmsley2020"],
+            labels["encoded_label"]
+        ))
+
+        return [mapping.get(label, None) for label in label_list]
+
+    elif direction == "encode_to_label":
+        mapping = dict(zip(
+            labels["encoded_label"],
+            labels["label:Walmsley2020"]
+        ))
+
+        return [mapping.get(code, None) for code in label_list]
 
 def data_description():
 

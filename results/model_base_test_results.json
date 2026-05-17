@@ -1,11 +1,5 @@
 {
     "model_results": {
-        "Random Forest - TEST": {
-            "accuracy": 0.7318,
-            "precision": 0.7386541702738237,
-            "recall": 0.7318,
-            "f1-score": 0.7340207470327227
-        },
         "kNN - TEST": {
             "accuracy": 0.62665,
             "precision": 0.6443207577160615,
