@@ -35,7 +35,7 @@ model = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=confi
 
 # activities = ["sleep", "sitting", "walking", "bicycling", "mixed-activity", "standing", "manual-work", "sports"]
 
-run_lim = 10
+run_lim = 10000000
 
 
 def test_llm():
@@ -283,7 +283,7 @@ def sample_training_data(x_train, y_train):
 
 if __name__ == "__main__":
     # test_llm()
-    remap_labels([0,1,2,3], "encode_to_label")
+    # remap_labels([0,1,2,3], "encode_to_label")
 
     x_train, x_test, y_train, y_test = get_llm_dataset()
 
