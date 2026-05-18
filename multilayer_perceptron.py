@@ -10,6 +10,18 @@ from feature_preprocessing import get_feature_dataset
 
 
 def test_model_basic(x_train, x_test, y_train, y_test):
+    """
+        Test the basic setup of a Multi-layer Perceptron to ensure library is imported correctly.
+
+        Args:
+            x_train (pandas.DataFrame): Dataframe containing training data.
+            x_test (pandas.Dataframe): Dataframe containing testing data.
+            y_train (pandas.Series): Series containing training labels.
+            y_test (pandas.Series): Series containing testing labels.
+
+        Returns:
+            None
+        """
     print("\nTesting basic MLP model...")
     mlp = MLPClassifier(max_iter=1000, random_state=41)
     mlp.fit(x_train, y_train)
@@ -35,6 +47,17 @@ def test_model_basic(x_train, x_test, y_train, y_test):
     generate_cm(y_test, y_pred, "TEST-MLP")
 
 def fine_tuning(x_train, y_train):
+    """
+        Fine-tune a Multi-layer Perceptron using a GridSearchCV object, saving the results of each
+        configuration to a CSV file.
+
+        Args:
+            x_train (pandas.DataFrame): Dataframe containing training data.
+            y_train (pandas.Series): Series containing training labels.
+
+        Returns:
+            None
+        """
     print("\nFine-tuning MLP model...")
 
     # create new mlp
@@ -72,6 +95,20 @@ def fine_tuning(x_train, y_train):
     results_df.to_csv(f'results\\mlp_fine_tune_results.csv', index=False)
 
 def assess_model(x_train, x_test, y_train, y_test):
+    """
+        Assess a Multi-layer Perceptron using the best performaing hyperparameter configuration
+        discovered during fine-tuning. Record performance metrics on test set, and create
+        supporting graphs for analysis.
+
+        Args:
+            x_train (pandas.DataFrame): Dataframe containing training data.
+            x_test (pandas.Dataframe): Dataframe containing testing data.
+            y_train (pandas.Series): Series containing training labels.
+            y_test (pandas.Series): Series containing testing labels.
+
+        Returns:
+            None
+        """
     """
     1. get best model params
     2. feed them into model
