@@ -5,7 +5,7 @@ import numpy as np
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
-from feature_preprocessing import remap_labels
+from utils import remap_labels
 
 
 def save_results(model_type, results_type, metrics):
@@ -119,7 +119,7 @@ def model_results_analysis():
     # create scatter graph of model results
     pass
 
-def fine_tune_results():
+def fine_tune_results(file):
     # create graph of fine tune results/comparison
     pass
 

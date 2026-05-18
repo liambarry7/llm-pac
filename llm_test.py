@@ -8,13 +8,14 @@ import re
 
 import torch
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, ConfusionMatrixDisplay, \
-    confusion_matrix
+    confusion_matrix, classification_report
 from sklearn.model_selection import train_test_split
 
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig # pip install torch transformers accelerate bitsandbytes
 
 from model_analysis import save_results, generate_cm, metric_comparison, class_comparison, predict_class_distribution
-from feature_preprocessing import get_feature_dataset, get_llm_dataset, remap_labels
+from feature_preprocessing import get_feature_dataset, get_llm_dataset
+from utils import remap_labels
 from standard_preprocessing import get_standard_dataset
 
 model_id = "google/gemma-2b-it"
@@ -107,19 +108,34 @@ def zero_shot_prompting(x_test, y_test):
     recall = recall_score(y_test[:len(pred_labels_encoded)], pred_labels_encoded, average="weighted")
     f1 = f1_score(y_test[:len(pred_labels_encoded)], pred_labels_encoded, average="weighted")
 
+    # acc = accuracy_score(y_test, pred_labels_encoded)
+    # prec = precision_score(y_test, pred_labels_encoded, average="weighted")
+    # recall = recall_score(y_test, pred_labels_encoded, average="weighted")
+    # f1 = f1_score(y_test, pred_labels_encoded, average="weighted")
+
     print(f"Accuracy: {acc * 100:.2f}%")
     print(f"Precision: {prec * 100:.2f}%")
     print(f"Recall: {recall * 100:.2f}%")
     print(f"F1-score: {f1 * 100:.2f}%")
 
     # record results
-    model_type = "Zero-shot Prompting"
+    model_type = "ZERO-SHOT"
     model_data = [acc, prec, recall, f1]
 
     save_results(model_type, "assess", model_data)
 
-    # create confusion matrix
-    generate_cm(y_test[:len(pred_labels_encoded)], pred_labels_encoded, "zero-shot")
+    # Create graphs for analysis
+    generate_cm(y_test[:len(pred_labels_encoded)], pred_labels_encoded, model_type)
+    metric_comparison(model_data, model_type)
+    class_report = classification_report(y_test[:len(pred_labels_encoded)], pred_labels_encoded, target_names=["light", "moderate-vigorous", "sedentary", "sleep"], output_dict=True)
+    class_comparison(class_report, model_type)
+    predict_class_distribution(pred_labels_encoded, model_type)
+
+    # generate_cm(y_test, pred_labels_encoded, model_type)
+    # metric_comparison(model_data, model_type)
+    # class_report = classification_report(y_test, pred_labels_encoded, target_names=["light", "moderate-vigorous", "sedentary", "sleep"], output_dict=True)
+    # class_comparison(class_report, model_type)
+    # predict_class_distribution(pred_labels_encoded, model_type)
 
 
 def few_shot_prompting(x_train, y_train, x_test, y_test):
@@ -274,5 +290,5 @@ if __name__ == "__main__":
     # sample_training_data(x_train, y_train)
 
     zero_shot_prompting(x_test, y_test)
-    few_shot_prompting(x_train, y_train, x_test, y_test)
+    # few_shot_prompting(x_train, y_train, x_test, y_test)
 

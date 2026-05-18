@@ -2,7 +2,10 @@ import pandas as pd
 import numpy as np
 import os
 
+from matplotlib import pyplot as plt
 from sklearn.preprocessing import StandardScaler
+
+from model_analysis import predict_class_distribution
 
 # create split of train and test participants
 participants = [f"P{i:03d}" for i in range(1, 152)]
@@ -355,40 +358,106 @@ def get_llm_dataset():
 
     return x_train, x_test, y_train, y_test
 
-def remap_labels(label_list, direction):
-    # --- New label mapping ---
-    annotation_label_dir = r"data\annotation-label-encoded.csv"
-    label_df = pd.read_csv(annotation_label_dir)
 
-    # get all unique pairs
-    labels = label_df[['label:Walmsley2020', 'encoded_label']].drop_duplicates().reset_index(drop=True)
-    # print(labels)
-
-    if direction == "label_to_encode":
-        mapping = dict(zip(
-            labels["label:Walmsley2020"],
-            labels["encoded_label"]
-        ))
-
-        return [mapping.get(label, None) for label in label_list]
-
-    elif direction == "encode_to_label":
-        mapping = dict(zip(
-            labels["encoded_label"],
-            labels["label:Walmsley2020"]
-        ))
-
-        return [mapping.get(code, None) for code in label_list]
 
 def data_description():
 
     """
-    - Need graphs for before and after processing
-    - total counts of data, labels etc
+    - Need graphs for before? and after processing
+    - total counts of labels (bar chart) etc
+    - structure of dataset (e.g. how many rows and columns, datatypes)
+    -
     """
+    #BEFORE
+    # can use preprocess_dir to loop through files
+    # get raw info from them (e.g. size, label counts?)
+    # add values all together for preprocessing
+    # LOOK TO REFERENCE CAPTURE24 ARTICLE FOR SOME OF THESE
+    row_count = 0
+    label_counts = {
+        0: 0, # light
+        1: 0, # moderate-vigorous
+        2: 0, # sedentary
+        3: 0 # sleep
+    }
 
 
-    pass
+    # get label, row counts
+    data_dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\capture24-csv"
+
+    for f in os.scandir(data_dir):
+        if f.is_file():
+            raw_name = os.path.splitext(f.name)[0]  # get file name without file extension (.csv)
+            print("\n" + raw_name)
+            print("\n" + os.path.join(data_dir, f.name))
+
+            # open file
+            df = pd.read_csv(os.path.join(data_dir, f.name))
+
+            # remove na/dupe
+            df_clean = remove_na_dup(df)
+
+            # map labels
+            df_mapped = map_labels(df_clean)
+
+            # count labels
+            counts = df_mapped['label'].value_counts()
+            print(counts)
+
+            for key in label_counts:
+                label_counts[key] += int(counts.get(key, 0))
+
+            print(f"Label Counts: {label_counts}")
+
+            # get row count
+            row_count += df_mapped.shape[0]
+
+    print("\n\nRaw data info:")
+    print(f"Total rows: {row_count}")
+    print(f"Label Counts: {label_counts}")
+    labels = ["light", "moderate-vigorous", "sedentary", "sleep"]
+
+    plt.figure(figsize=(9, 6))
+    bars = plt.bar(labels, label_counts.values())
+    plt.bar_label(bars, fmt="{:,.0f}")
+    plt.ticklabel_format(style="plain", axis="y")
+    plt.title(f" Class Distribution")
+    plt.xlabel("Activity")
+    plt.ylabel("Counts")
+    plt.savefig(f"graphs\\raw_dataset_cd")
+    plt.show()
+
+
+
+    #AFTER
+    # create bar chart for class distribution (maybe use pcd from model analysis?)
+    # get raw info for final datasets (e.g. size, label counts, columns, datatypes)
+    print("\n\nPreprocessed data info:")
+    dataset_type = ["LLM-SS", "SS"]
+    for type in dataset_type:
+        train_df = pd.read_csv(f"data\\TRAIN-DATA-{type}.csv")
+        test_df = pd.read_csv(f"data\\TEST-DATA-{type}.csv")
+
+        print(f"\nTRAIN-DATA-{type}")
+        print(f"Data description: {train_df.describe()}")
+        print(f"Columns: {train_df.columns}")
+        print(f"Shape: {train_df.shape}")
+        print(f"Size: {train_df.size}")
+        print(f"Data types: {train_df.dtypes}")
+
+        train_labels = train_df['label']
+        predict_class_distribution(train_labels, f"TRAIN-DATA-{type}")
+
+        print(f"\nTEST-DATA-{type}")
+        print(f"Data description: {test_df.describe()}")
+        print(f"Columns: {test_df.columns}")
+        print(f"Shape: {test_df.shape}")
+        print(f"Size: {test_df.size}")
+        print(f"Data types: {test_df.dtypes}")
+
+        test_labels = test_df['label']
+        predict_class_distribution(test_labels, f"TEST-DATA-{type}")
+
 
 if __name__ == "__main__":
     # label_annotation_mapping()
@@ -402,10 +471,10 @@ if __name__ == "__main__":
     # combine_data("test")
 
     # scale data (normalise)
-    scale_and_sample_data()
+    # scale_and_sample_data()
     # llm_sample_data()
 
-
+    data_description()
     # df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv")
     # print(df.shape)
     # print(df.columns)
