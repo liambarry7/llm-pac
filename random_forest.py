@@ -49,8 +49,8 @@ def test_model_basic(x_train, x_test, y_train, y_test):
 
 def fine_tuning(x_train, y_train, dataset_type="standard"):
     """
-        Fine-tune a Random Forest Classifier using a GridSearchCV object, saving the results of each
-        configuration to a CSV file.
+        Fine-tune a Random Forest Classifier using a GridSearchCV object on the standardised feature dataset,
+        saving the results of each configuration to a CSV file.
 
         Args:
             x_train (pandas.DataFrame): Dataframe containing training data.
