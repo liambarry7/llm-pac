@@ -1,6 +1,17 @@
 import pandas as pd
 
 def remap_labels(label_list, direction):
+    """
+        Utility function use to convert a list of labels from encoded to string, or string to encoded.
+        E.g. 'sleep' -> 3 or 0 -> 'light'
+
+        Args:
+            label_list (list): list of labels to remap
+            direction (str): 'label_to_encode' or 'encode_to_label'
+
+        Returns:
+            List: list of remapped labels
+        """
     # --- New label mapping ---
     annotation_label_dir = r"data\annotation-label-encoded.csv"
     label_df = pd.read_csv(annotation_label_dir)

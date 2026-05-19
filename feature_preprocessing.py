@@ -13,6 +13,16 @@ training_participants = participants[:120]
 test_participants = participants[120:]
 
 def label_annotation_mapping():
+    """
+        Create and save a utility CSV file which contains the mapping between activity annotations, the Walmsley2020
+        label and its encoded value
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
     # use this function to create a new csv file for the
     # annotation-label dictionary, with each value mapped to a corresponding number
     dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\capture24\annotation-label-dictionary.csv"
@@ -37,13 +47,22 @@ def label_annotation_mapping():
     label_df.to_csv(save_dir, mode='w', index=False)
 
 def preprocess_dir(subjects, output_dir):
+    """
+        Loop through the capture24 directory for preprocessing selected subjects
+
+        Args:
+            subjects (list): list of subject IDs
+            output_dir (string): path to a subjects CSV file
+
+        Returns:
+            None
+        """
     # function to loop through all raw csvs and preprocess their data
     data_dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\capture24-csv"
 
     for f in os.scandir(data_dir):
         if f.is_file():
             raw_name = os.path.splitext(f.name)[0] # get file name without file extension (.csv)
-
 
             # only process selected participants
             if raw_name not in subjects:
@@ -56,6 +75,17 @@ def preprocess_dir(subjects, output_dir):
 
 
 def preprocess_file(file, f_name, output_dir):
+    """
+        Preprocess a participants CSV file and save it in its corresponding folder.
+
+        Args:
+            file (string): path to a participants CSV file
+            f_name (string): file name
+            output_dir (string): path to output folder
+
+        Returns:
+            None
+        """
     """
             NEW PIPELINE
             - split subjects (120 train/31 test)
@@ -96,14 +126,22 @@ def preprocess_file(file, f_name, output_dir):
     print(f"File size (total data points): {feature_df.size}")
     print(f"df shape: {feature_df.shape}")
 
-    # save csv file (P001-S -> S for sampled)
-    # dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data"
+    # save csv file (P001-F -> F for feature set)
     dir = r"data"
     feature_df.to_csv(f"{dir}\\{output_dir}\\{f_name}-F.csv", mode='w', index=False)
 
 
 
 def remove_na_dup(df):
+    """
+        Remove any null values (missing values) or duplicate rows from a Dataframe
+
+        Args:
+            df (pandas.DataFrame): Dataframe of participant's data
+
+        Returns:
+            pandas.DataFrame: Dataframe of cleaned participant's data
+        """
     # remove any rows with na values and duplicates
 
     print("\n-- Drop NA Rows --")
@@ -122,9 +160,18 @@ def remove_na_dup(df):
     return df
 
 def map_labels(df):
+    """
+        Map the encoded labels from the utility CSV file "annotation-label-encoded.csv" to the annotations
+        in the participant's DataFrame
+
+        Args:
+            df (pandas.DataFrame): Dataframe of participant's data
+
+        Returns:
+            pandas.DataFrame: Dataframe with labels encoded
+        """
     # --- New label mapping ---
     print("\n-- Label Mapping --")
-    # annotation_label_dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\annotation-label-encoded.csv"
     annotation_label_dir = r"data\annotation-label-encoded.csv"
     label_df = pd.read_csv(annotation_label_dir)
     print(label_df[['label:Walmsley2020', 'encoded_label']].value_counts())
@@ -142,6 +189,15 @@ def map_labels(df):
 
 
 def window_data(df):
+    """
+        Create sliding windows over participant's DataFrame for feature engineering
+
+        Args:
+            df (pandas.DataFrame): Dataframe of participant's data
+
+        Returns:
+            pandas.DataFrame: Dataframe of participant's data as feature windows
+        """
     windows = [] # list of rows (one per window)
     size = 500 # window size
     step_size = 250 # 50% overlap
@@ -154,11 +210,20 @@ def window_data(df):
 
         windows.append(features)
 
-    # convert list of windowed features back into df
+    # convert dict of windowed features back into df
     feature_df = pd.DataFrame(windows)
     return feature_df
 
 def feature_extraction(window):
+    """
+        Within a given window of data, extract features
+
+        Args:
+            window (pandas.DataFrame): A window of a Dataframe of participant's data
+
+        Returns:
+            dict: return a dictionary of engineered features
+        """
     features = {}
 
     # mean
@@ -213,11 +278,16 @@ def feature_extraction(window):
 
 
 def combine_data(dir):
-    # function to loop through cleaned csvs and concat them together to form a master cleaned file w/ all data
-    # data_dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\cleaned-data"
-    # master_df = pd.DataFrame(columns=['time', 'x', 'y', 'z', 'annotation', 'label'])
+    """
+        Combine all CSV files within a given directory, and save the combined data as new CSV file
 
-    # data_dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data"
+        Args:
+            dir (String): name of directory
+
+        Returns:
+            None
+        """
+    # function to loop through cleaned csvs and concat them together to form a master cleaned file w/ all data
     data_dir = r"data"
     selected_dir = os.path.join(data_dir, dir)
     print(selected_dir)
@@ -227,8 +297,6 @@ def combine_data(dir):
 
     for f in os.scandir(selected_dir):
         if f.is_file():
-            # print(f.path)
-
             # combine all files in same directory as before
             # but have one folder for each train and test subjects
 
@@ -241,14 +309,22 @@ def combine_data(dir):
 
     # save master df as csv
     if dir == "train":
-        # master_df.to_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA.csv", mode='w', index=False)
         master_df.to_csv(r"data\TRAIN-DATA.csv", mode='w', index=False)
     elif dir == "test":
         master_df.to_csv(r"data\TEST-DATA.csv", mode='w', index=False)
 
 def scale_and_sample_data():
-    # train_df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA.csv")
-    # test_df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA.csv")
+    """
+        Scale, sample and save training and test data for traditional machine learning.
+        Scaling is done using StandardScaler and total sample size is 100,000
+        (80% Train, 20% test)
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
     train_df = pd.read_csv(r"data\TRAIN-DATA.csv")
     test_df = pd.read_csv(r"data\TEST-DATA.csv")
     
@@ -282,13 +358,20 @@ def scale_and_sample_data():
     print(f"Testing size: {test_sampled.shape}")
 
     # save datasets - csv file (-SS for scaled + sampled)
-    # train_sampled.to_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv", mode = 'w', index = False)
-    # test_sampled.to_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA-SS.csv", mode = 'w', index = False)
     train_sampled.to_csv(r"data\TRAIN-DATA-SS.csv", mode = 'w', index = False)
     test_sampled.to_csv(r"data\TEST-DATA-SS.csv", mode = 'w', index = False)
 
 
 def llm_sample_data():
+    """
+        Sample and save train and test data for LLM usage. Sample size is 25,000 (80% Train, 20% test)
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
     train_df = pd.read_csv(r"data\TRAIN-DATA.csv")
     test_df = pd.read_csv(r"data\TEST-DATA.csv")
 
@@ -305,6 +388,18 @@ def llm_sample_data():
     test_sampled.to_csv(r"data\TEST-DATA-LLM-SS.csv", mode='w', index=False)
 
 def sample_dataset(df, sample_size, training):
+    """
+        Sample a DataFrame given a set size. Check if DataFrame is for training data - if yes, use
+        stratified sampling to remove class imbalance.
+
+        Args:
+            df (pandas.DataFrame): Dataframe of training or test data
+            sample_size (int): number of samples to select
+            training (bool): whether df is training data or test data
+
+        Returns:
+            pandas.DataFrame: Dataframe of sampled data
+        """
     # return a sample from the df
     print(f"\ndf size before sampling: {df.shape}")
 
@@ -327,11 +422,21 @@ def sample_dataset(df, sample_size, training):
     return df_sample
 
 def get_feature_dataset():
-    # dir1 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TRAIN-DATA-SS.csv"
+    """
+        Return the training and test data as x and y sets
+
+        Args:
+            None
+
+        Returns:
+            pandas.DataFrame: x_train - training data as DataFrame without training labels
+            pandas.DataFrame: x_test - test data as DataFrame without test labels
+            pandas.Series: y_train - training labels as Series
+            pandas.Series: y_test - training labels as Series
+        """
     dir1 = r"data\TRAIN-DATA-SS.csv"
     df_train = pd.read_csv(dir1)
 
-    # dir2 = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\TEST-DATA-SS.csv"
     dir2 = r"data\TEST-DATA-SS.csv"
     df_test = pd.read_csv(dir2)
 
@@ -344,6 +449,18 @@ def get_feature_dataset():
     return x_train, x_test, y_train, y_test
 
 def get_llm_dataset():
+    """
+        Return the training and test data as x and y sets for LLM.
+
+        Args:
+            None
+
+        Returns:
+            pandas.DataFrame: x_train - training data as DataFrame without training labels
+            pandas.DataFrame: x_test - test data as DataFrame without test labels
+            pandas.Series: y_train - training labels as Series
+            pandas.Series: y_test - training labels as Series
+        """
     dir1 = r"data\TRAIN-DATA-LLM-SS.csv"
     df_train = pd.read_csv(dir1)
 
@@ -361,6 +478,16 @@ def get_llm_dataset():
 
 
 def data_description():
+    """
+        Perform a data description on the unprocessed and preprocessed datasets,
+        create supporting graphs and statistics
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
 
     """
     - Need graphs for before? and after processing
@@ -475,9 +602,3 @@ if __name__ == "__main__":
     # llm_sample_data()
 
     data_description()
-    # df = pd.read_csv(r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\data\MASTER-DATA.csv")
-    # print(df.shape)
-    # print(df.columns)
-    # print(f"\nannotation + label + counts: \n {df[['label']].value_counts()}")
-
-    # test_harness()

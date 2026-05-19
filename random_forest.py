@@ -10,6 +10,18 @@ from model_analysis import save_results, generate_cm, metric_comparison, class_c
 
 
 def test_model_basic(x_train, x_test, y_train, y_test):
+    """
+        Test the basic setup of a Random Forest Classifier to ensure library is imported correctly.
+
+        Args:
+            x_train (pandas.DataFrame): Dataframe containing training data.
+            x_test (pandas.Dataframe): Dataframe containing testing data.
+            y_train (pandas.Series): Series containing training labels.
+            y_test (pandas.Series): Series containing testing labels.
+
+        Returns:
+            None
+        """
     print("\nTesting basic Random Forest model...")
     rf = RandomForestClassifier()
     rf.fit(x_train, y_train)
@@ -36,6 +48,17 @@ def test_model_basic(x_train, x_test, y_train, y_test):
 
 
 def fine_tuning(x_train, y_train):
+    """
+        Fine-tune a Random Forest Classifier using a GridSearchCV object, saving the results of each
+        configuration to a CSV file.
+
+        Args:
+            x_train (pandas.DataFrame): Dataframe containing training data.
+            y_train (pandas.Series): Series containing training labels.
+
+        Returns:
+            None
+        """
     print("\nFine-tuning Random Forest model...")
 
     # create rf model with no params
@@ -74,6 +97,20 @@ def fine_tuning(x_train, y_train):
 
 
 def assess_model(x_train, x_test, y_train, y_test):
+    """
+        Assess a Random Forest Classifier using the best performaing hyperparameter configuration
+        discovered during fine-tuning. Record performance metrics on test set, and create
+        supporting graphs for analysis.
+
+        Args:
+            x_train (pandas.DataFrame): Dataframe containing training data.
+            x_test (pandas.Dataframe): Dataframe containing testing data.
+            y_train (pandas.Series): Series containing training labels.
+            y_test (pandas.Series): Series containing testing labels.
+
+        Returns:
+            None
+        """
     """
     1. get best model params
     2. feed them into model
