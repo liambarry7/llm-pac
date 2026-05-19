@@ -1,22 +1,21 @@
 # pip install -U "huggingface_hub"
 import json
 
+import numpy as np
 # hf auth login
 # pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 import pandas as pd
 import re
 
 import torch
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, ConfusionMatrixDisplay, \
-    confusion_matrix, classification_report
-from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
 
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig # pip install torch transformers accelerate bitsandbytes
 
 from model_analysis import save_results, generate_cm, metric_comparison, class_comparison, predict_class_distribution
 from feature_preprocessing import get_feature_dataset, get_llm_dataset
 from utils import remap_labels
-from standard_preprocessing import get_standard_dataset
 
 model_id = "google/gemma-2b-it"
 
@@ -28,12 +27,6 @@ config = BitsAndBytesConfig(
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=config, device_map="cuda")
-
-# tokenizer = AutoTokenizer.from_pretrained("google/gemma-2b-it")
-# # model = AutoModelForCausalLM.from_pretrained("google/gemma-2b-it", device_map="auto", load_in_8bit=True) # pip install accelerate
-# model = AutoModelForCausalLM.from_pretrained("google/gemma-2b-it").to("cuda") # pip install accelerate
-
-# activities = ["sleep", "sitting", "walking", "bicycling", "mixed-activity", "standing", "manual-work", "sports"]
 
 # run_lim = 10000000
 run_lim = 10
@@ -265,6 +258,56 @@ def few_shot_prompting(x_train, y_train, x_test, y_test):
     # class_comparison(class_report, model_type)
     # predict_class_distribution(pred_labels_encoded, model_type)
 
+def rf_cot(x_train, y_train, x_test, y_test):
+    # get best params
+    dir = f"results\\rf_llm_fine_tune_results.csv"
+    df = pd.read_csv(dir)
+    optimal_params = \
+    df[['param_n_estimators', 'param_max_depth', 'param_min_samples_leaf', 'param_min_samples_split']].iloc[0]
+    params = optimal_params.to_list()
+    if pd.isna(params[1]):
+        params[1] = None
+    print(params)
+
+    rf = RandomForestClassifier(n_estimators=int(params[0]), max_depth=params[1], min_samples_leaf=int(params[2]),
+                                min_samples_split=int(params[3]), random_state=42)
+
+    rf.fit(x_train, y_train)
+
+    # ---- split function here so that can save trained model, then load for fitting the data etc
+
+    # predict
+    y_pred = rf.predict_proba(x_test) # returns array per row of predicted confidence levels
+
+    final_preds = []
+    count = 0
+    for i in range(len(x_test)):
+        sample_pred = y_pred[i]
+        pred_id = np.argmax(sample_pred)
+        confidence = sample_pred[pred_id]
+        pred_label = rf.classes_[pred_id] # map to label
+
+        print(f"\nsample_pred: {sample_pred}")
+        print(f"pred_id: {pred_id}")
+        print(f"Confidence: {confidence}")
+        print(f"Pred label: {pred_label}")
+
+        # cahnge to  a margin ---- or maybe use both margin and confidence?
+
+        # high confidence
+        if confidence >= 0.70:
+            final_preds.append(pred_label)
+
+        else:
+            # low confidence, consult LLM with CoT
+            count +=1
+
+    confidences = np.max(y_pred, axis=1)
+    print(f"Mean confidence: {np.mean(confidences)}")
+    print(f"Min confidence: {np.min(confidences)}")
+    print(f"Max confidence: {np.max(confidences)}")
+    print(f"No of low confidence: {count}/{len(x_test)}")
+
 def extract_label(response):
     if "Answer:" in response:
         response = response.split("Answer:")[-1]
@@ -300,6 +343,13 @@ if __name__ == "__main__":
 
     # sample_training_data(x_train, y_train)
 
-    # zero_shot_prompting(x_test, y_test)
-    few_shot_prompting(x_train, y_train, x_test, y_test)
+
+
+    rf_cot(x_train, y_train, x_test, y_test)
+
+    # DO NOT RUN AGAIN
+    # #zero_shot_prompting(x_test, y_test)
+    # #few_shot_prompting(x_train, y_train, x_test, y_test)
+
+
 

@@ -47,7 +47,7 @@ def test_model_basic(x_train, x_test, y_train, y_test):
     generate_cm(y_test, y_pred, "TEST-RF")
 
 
-def fine_tuning(x_train, y_train):
+def fine_tuning(x_train, y_train, dataset_type="standard"):
     """
         Fine-tune a Random Forest Classifier using a GridSearchCV object, saving the results of each
         configuration to a CSV file.
@@ -55,6 +55,7 @@ def fine_tuning(x_train, y_train):
         Args:
             x_train (pandas.DataFrame): Dataframe containing training data.
             y_train (pandas.Series): Series containing training labels.
+            dataset_type (String): String containing dataset type for saving file
 
         Returns:
             None
@@ -93,7 +94,10 @@ def fine_tuning(x_train, y_train):
          'std_test_score', 'rank_test_score']].sort_values(by='rank_test_score')
     print(results_df.head())
 
-    results_df.to_csv(f'results\\rf_fine_tune_results.csv', index=False)
+    if dataset_type == "llm":
+        results_df.to_csv(f'results\\rf_llm_fine_tune_results.csv', index=False)
+    elif dataset_type == "standard":
+        results_df.to_csv(f'results\\rf_fine_tune_results.csv', index=False)
 
 
 def assess_model(x_train, x_test, y_train, y_test):
@@ -171,5 +175,6 @@ if __name__ == "__main__":
     # test_model_basic(x_train, x_test, y_train, y_test)
 
     # fine_tuning(x_train, y_train)
+    fine_tuning(x_train, y_train, "llm")
 
-    assess_model(x_train, x_test, y_train, y_test)
+    # assess_model(x_train, x_test, y_train, y_test)
