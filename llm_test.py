@@ -35,7 +35,8 @@ model = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=confi
 
 # activities = ["sleep", "sitting", "walking", "bicycling", "mixed-activity", "standing", "manual-work", "sports"]
 
-run_lim = 10000000
+# run_lim = 10000000
+run_lim = 10
 
 
 def test_llm():
@@ -98,8 +99,8 @@ def zero_shot_prompting(x_test, y_test):
         pred_labels.append(r)
         print(f"Actual label: {y_test[i]}, Activity: {y_unencoded[i]}")
 
-        if i == run_lim:
-            break
+        # if i == run_lim:
+        #     break
 
     pred_labels_encoded = remap_labels(pred_labels, "label_to_encode")
 
@@ -230,8 +231,8 @@ def few_shot_prompting(x_train, y_train, x_test, y_test):
         print(r)
         print(f"Actual label: {y_test[i]}, Activity: {y_unencoded[i]}")
 
-        if i == run_lim:
-            break
+        # if i == run_lim:
+        #     break
 
     pred_labels_encoded = remap_labels(pred_labels, "label_to_encode")
 
@@ -246,13 +247,23 @@ def few_shot_prompting(x_train, y_train, x_test, y_test):
     print(f"F1-score: {f1 * 100:.2f}%")
 
     # record results
-    model_type = "Few-shot Prompting"
+    model_type = "FEW-SHOT"
     model_data = [acc, prec, recall, f1]
 
     save_results(model_type, "assess", model_data)
 
-    # create confusion matrix
-    generate_cm(y_test[:len(pred_labels_encoded)], pred_labels_encoded, "few-shot")
+    # Create graphs for analysis
+    generate_cm(y_test[:len(pred_labels_encoded)], pred_labels_encoded, model_type)
+    metric_comparison(model_data, model_type)
+    class_report = classification_report(y_test[:len(pred_labels_encoded)], pred_labels_encoded, target_names=["light", "moderate-vigorous", "sedentary", "sleep"], output_dict=True)
+    class_comparison(class_report, model_type)
+    predict_class_distribution(pred_labels_encoded, model_type)
+
+    # generate_cm(y_test, pred_labels_encoded, model_type)
+    # metric_comparison(model_data, model_type)
+    # class_report = classification_report(y_test, pred_labels_encoded, target_names=["light", "moderate-vigorous", "sedentary", "sleep"], output_dict=True)
+    # class_comparison(class_report, model_type)
+    # predict_class_distribution(pred_labels_encoded, model_type)
 
 def extract_label(response):
     if "Answer:" in response:
@@ -289,6 +300,6 @@ if __name__ == "__main__":
 
     # sample_training_data(x_train, y_train)
 
-    zero_shot_prompting(x_test, y_test)
-    # few_shot_prompting(x_train, y_train, x_test, y_test)
+    # zero_shot_prompting(x_test, y_test)
+    few_shot_prompting(x_train, y_train, x_test, y_test)
 
