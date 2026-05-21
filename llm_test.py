@@ -30,8 +30,8 @@ config = BitsAndBytesConfig(
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=config, device_map="cuda")
 
-# run_lim = 10000000
-run_lim = 10
+run_lim = 10000000
+# run_lim = 10
 
 
 def test_llm():
@@ -261,40 +261,6 @@ def few_shot_prompting(x_train, y_train, x_test, y_test):
     # class_comparison(class_report, model_type)
     # predict_class_distribution(pred_labels_encoded, model_type)
 
-# MOVE TO RF.PY???, remove test params
-# def rf_llm_train(x_train, y_train, x_test, y_test):
-#     """
-#        Fine-tune a Random Forest Classifier using a GridSearchCV  on the LLM feature dataset, saving the results of each
-#         configuration to a CSV file.
-#
-#         Args:
-#             x_train (pandas.DataFrame): Dataframe containing training data.
-#             y_train (pandas.Series): Series containing training labels.
-#             dataset_type (String): String containing dataset type for saving file
-#
-#         Returns:
-#             None
-#        """
-#     # get best params
-#     dir = f"results\\rf_llm_fine_tune_results.csv"
-#     df = pd.read_csv(dir)
-#     optimal_params = \
-#     df[['param_n_estimators', 'param_max_depth', 'param_min_samples_leaf', 'param_min_samples_split']].iloc[0]
-#     params = optimal_params.to_list()
-#     if pd.isna(params[1]):
-#         params[1] = None
-#     print(params)
-#
-#     rf = RandomForestClassifier(n_estimators=int(params[0]), max_depth=params[1], min_samples_leaf=int(params[2]),
-#                                 min_samples_split=int(params[3]), random_state=42)
-#
-#     rf.fit(x_train, y_train)
-#
-#     # save model
-#     with open('models\\rf_llm.pkl', 'wb') as file:
-#         pickle.dump(rf, file)
-
-    # ---- split function here so that can save trained model, then load for fitting the data
 
 def rf_cot(x_test, y_test):
     """
@@ -357,7 +323,7 @@ def rf_cot(x_test, y_test):
             rf_margin_preds.append(pred_label)
             margin_labels.append(y_test[i])
 
-            if count > 10:
+            if count > run_lim:
                 break
 
     confidences = np.max(y_pred, axis=1)
@@ -436,7 +402,7 @@ def rf_cot(x_test, y_test):
     full_rf_recall = recall_score(y_test[:len(total_rf_preds)], total_rf_preds, average="weighted")
     full_rf_f1 = f1_score(y_test[:len(total_rf_preds)], total_rf_preds, average="weighted")
 
-    model_type = "RF-LLM"
+    model_type = "RF-LLM-FULL"
     model_data = [rf_acc, rf_prec, rf_recall, rf_f1]
     save_results(model_type, "assess", model_data)
 
@@ -450,15 +416,6 @@ def rf_cot(x_test, y_test):
 
     print(F"\nFull RF acc: {full_rf_acc}, Full RF prec: {full_rf_prec}, Full RF recall: {full_rf_recall}, Full RF f1: {full_rf_f1}")
 
-
-    # # Create graphs for analysis
-    # generate_cm(y_test[:len(pred_labels_encoded)], pred_labels_encoded, model_type)
-    # metric_comparison(model_data, model_type)
-    # class_report = classification_report(y_test[:len(pred_labels_encoded)], pred_labels_encoded,
-    #                                      target_names=["light", "moderate-vigorous", "sedentary", "sleep"],
-    #                                      output_dict=True)
-    # class_comparison(class_report, model_type)
-    # predict_class_distribution(pred_labels_encoded, model_type)
 
 def cot(x_test, pred_label, confidence):
     """
