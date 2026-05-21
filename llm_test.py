@@ -360,24 +360,105 @@ def rf_cot(x_test, y_test):
             if count > 10:
                 break
 
-
     confidences = np.max(y_pred, axis=1)
     print(f"Mean confidence: {np.mean(confidences)}")
     print(f"Min confidence: {np.min(confidences)}")
     print(f"Max confidence: {np.max(confidences)}")
-    print(f"No of low confidence: {count}/{len(x_test)}")
+    print(f"No of low confidence: {count}/{len(x_test)}") # 892/5000 - 5hrs
 
-    # pred_labels_encoded = remap_labels(final_preds, "label_to_encode")
 
-    total_acc = accuracy_score(y_test[:len(final_preds)], final_preds)
+    # Full model results
+    model_acc = accuracy_score(y_test[:len(final_preds)], final_preds)
+    model_prec = precision_score(y_test[:len(final_preds)], final_preds, average="weighted")
+    model_recall = recall_score(y_test[:len(final_preds)], final_preds, average="weighted")
+    model_f1 = f1_score(y_test[:len(final_preds)], final_preds, average="weighted")
+
+    model_type = "RF-CoT"
+    model_data = [model_acc, model_prec, model_recall, model_f1]
+    save_results(model_type, "assess", model_data)
+
+    generate_cm(y_test[:len(final_preds)], final_preds, model_type)
+    metric_comparison(model_data, model_type)
+    class_report = classification_report(y_test[:len(final_preds)], final_preds,
+                                         target_names=["light", "moderate-vigorous", "sedentary", "sleep"],
+                                         output_dict=True)
+    class_comparison(class_report, model_type)
+    predict_class_distribution(final_preds, model_type)
+
+    print(F"\nTotal acc: {model_acc}, model prec: {model_prec}, model recall: {model_recall}, model f1: {model_f1}")
+
+
+    # just CoT results
     cot_acc = accuracy_score(margin_labels[:len(cot_margin_preds)], cot_margin_preds)
-    rf_acc = accuracy_score(margin_labels[:len(rf_margin_preds)], rf_margin_preds)
-    full_rf_acc = accuracy_score(y_test[:len(total_rf_preds)], total_rf_preds)
-    print(F"Total acc: {total_acc}")
-    print(F"CoT acc: {cot_acc}")
-    print(F"RF acc: {rf_acc}")
-    print(F"Full RF acc: {full_rf_acc}")
+    cot_prec = precision_score(y_test[:len(cot_margin_preds)], cot_margin_preds, average="weighted")
+    cot_recall = recall_score(y_test[:len(cot_margin_preds)], cot_margin_preds, average="weighted")
+    cot_f1 = f1_score(y_test[:len(cot_margin_preds)], cot_margin_preds, average="weighted")
 
+    model_type = "CoT"
+    model_data = [cot_acc, cot_prec, cot_recall, cot_f1]
+    save_results(model_type, "assess", model_data)
+
+    generate_cm(y_test[:len(margin_labels)], cot_margin_preds, model_type)
+    metric_comparison(model_data, model_type)
+    class_report = classification_report(margin_labels[:len(cot_margin_preds)], cot_margin_preds,
+                                         target_names=["light", "moderate-vigorous", "sedentary", "sleep"],
+                                         output_dict=True)
+    class_comparison(class_report, model_type)
+    predict_class_distribution(cot_margin_preds, model_type)
+
+    print(F"\nCoT acc: {cot_acc}, CoT prec: {cot_prec}, CoT recall: {cot_recall}, CoT f1: {cot_f1}")
+
+
+    # just RF results
+    rf_acc = accuracy_score(margin_labels[:len(rf_margin_preds)], rf_margin_preds)
+    rf_prec = precision_score(y_test[:len(rf_margin_preds)], rf_margin_preds, average="weighted")
+    rf_recall = recall_score(y_test[:len(rf_margin_preds)], rf_margin_preds, average="weighted")
+    rf_f1 = f1_score(y_test[:len(rf_margin_preds)], rf_margin_preds, average="weighted")
+
+    model_type = "RF-LLM"
+    model_data = [rf_acc, rf_prec, rf_recall, rf_f1]
+    save_results(model_type, "assess", model_data)
+
+    generate_cm(margin_labels[:len(rf_margin_preds)], rf_margin_preds, model_type)
+    metric_comparison(model_data, model_type)
+    class_report = classification_report(margin_labels[:len(rf_margin_preds)], rf_margin_preds,
+                                         target_names=["light", "moderate-vigorous", "sedentary", "sleep"],
+                                         output_dict=True)
+    class_comparison(class_report, model_type)
+    predict_class_distribution(rf_margin_preds, model_type)
+
+    print(F"\nRF acc: {rf_acc}, RF prec: {rf_prec}, RF recall: {rf_recall}, RF f1: {rf_f1}")
+
+
+    # full rf results
+    full_rf_acc = accuracy_score(y_test[:len(total_rf_preds)], total_rf_preds)
+    full_rf_prec = precision_score(y_test[:len(total_rf_preds)], total_rf_preds, average="weighted")
+    full_rf_recall = recall_score(y_test[:len(total_rf_preds)], total_rf_preds, average="weighted")
+    full_rf_f1 = f1_score(y_test[:len(total_rf_preds)], total_rf_preds, average="weighted")
+
+    model_type = "RF-LLM"
+    model_data = [rf_acc, rf_prec, rf_recall, rf_f1]
+    save_results(model_type, "assess", model_data)
+
+    generate_cm(y_test[:len(total_rf_preds)], total_rf_preds, model_type)
+    metric_comparison(model_data, model_type)
+    class_report = classification_report(y_test[:len(total_rf_preds)], total_rf_preds,
+                                         target_names=["light", "moderate-vigorous", "sedentary", "sleep"],
+                                         output_dict=True)
+    class_comparison(class_report, model_type)
+    predict_class_distribution(total_rf_preds, model_type)
+
+    print(F"\nFull RF acc: {full_rf_acc}, Full RF prec: {full_rf_prec}, Full RF recall: {full_rf_recall}, Full RF f1: {full_rf_f1}")
+
+
+    # # Create graphs for analysis
+    # generate_cm(y_test[:len(pred_labels_encoded)], pred_labels_encoded, model_type)
+    # metric_comparison(model_data, model_type)
+    # class_report = classification_report(y_test[:len(pred_labels_encoded)], pred_labels_encoded,
+    #                                      target_names=["light", "moderate-vigorous", "sedentary", "sleep"],
+    #                                      output_dict=True)
+    # class_comparison(class_report, model_type)
+    # predict_class_distribution(pred_labels_encoded, model_type)
 
 def cot(x_test, pred_label, confidence):
     """
