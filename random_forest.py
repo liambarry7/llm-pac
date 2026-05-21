@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, precision_score, recall_score, f1_score
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
 
-from feature_preprocessing import get_feature_dataset
+from feature_preprocessing import get_feature_dataset, get_llm_dataset
 from model_analysis import save_results, generate_cm, metric_comparison, class_comparison, predict_class_distribution
 
 
@@ -168,13 +168,48 @@ def assess_model(x_train, x_test, y_train, y_test):
         pickle.dump(rf, file)
 
 
+def rf_llm_train(x_train, y_train):
+    """
+       Fine-tune a Random Forest Classifier using a GridSearchCV  on the LLM feature dataset, saving the results of each
+        configuration to a CSV file.
+
+        Args:
+            x_train (pandas.DataFrame): Dataframe containing training data.
+            y_train (pandas.Series): Series containing training labels.
+            dataset_type (String): String containing dataset type for saving file
+
+        Returns:
+            None
+       """
+    # get best params
+    dir = f"results\\rf_llm_fine_tune_results.csv"
+    df = pd.read_csv(dir)
+    optimal_params = \
+    df[['param_n_estimators', 'param_max_depth', 'param_min_samples_leaf', 'param_min_samples_split']].iloc[0]
+    params = optimal_params.to_list()
+    if pd.isna(params[1]):
+        params[1] = None
+    print(params)
+
+    rf = RandomForestClassifier(n_estimators=int(params[0]), max_depth=params[1], min_samples_leaf=int(params[2]),
+                                min_samples_split=int(params[3]), random_state=42)
+
+    rf.fit(x_train, y_train)
+
+    # save model
+    with open('models\\rf_llm.pkl', 'wb') as file:
+        pickle.dump(rf, file)
+
 if __name__ == "__main__":
 
-    x_train, x_test, y_train, y_test = get_feature_dataset()
+    # x_train, x_test, y_train, y_test = get_feature_dataset()
 
     # test_model_basic(x_train, x_test, y_train, y_test)
 
     # fine_tuning(x_train, y_train)
-    fine_tuning(x_train, y_train, "llm")
 
     # assess_model(x_train, x_test, y_train, y_test)
+
+    x_train, x_test, y_train, y_test = get_llm_dataset()
+    fine_tuning(x_train, y_train, "llm")
+    rf_llm_train(x_train, y_train)
