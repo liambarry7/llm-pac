@@ -23,8 +23,7 @@ def label_annotation_mapping():
         Returns:
             None
         """
-    # use this function to create a new csv file for the
-    # annotation-label dictionary, with each value mapped to a corresponding number
+
     dir = r"D:\kimia\Documents\University\UEA\Yr3 Project\Dataset\capture24\annotation-label-dictionary.csv"
 
     label_df = pd.read_csv(dir)
@@ -100,7 +99,6 @@ def preprocess_file(file, f_name, output_dir):
             - save sampled set
         """
 
-    # used to preprocess raw data in a given file and save the cleaned data
     df = pd.read_csv(file)
     print(df.head())
     print(f"File: ")
@@ -170,7 +168,6 @@ def map_labels(df):
         Returns:
             pandas.DataFrame: Dataframe with labels encoded
         """
-    # --- New label mapping ---
     print("\n-- Label Mapping --")
     annotation_label_dir = r"data\annotation-label-encoded.csv"
     label_df = pd.read_csv(annotation_label_dir)
@@ -287,7 +284,6 @@ def combine_data(dir):
         Returns:
             None
         """
-    # function to loop through cleaned csvs and concat them together to form a master cleaned file w/ all data
     data_dir = r"data"
     selected_dir = os.path.join(data_dir, dir)
     print(selected_dir)
@@ -400,12 +396,10 @@ def sample_dataset(df, sample_size, training):
         Returns:
             pandas.DataFrame: Dataframe of sampled data
         """
-    # return a sample from the df
     print(f"\ndf size before sampling: {df.shape}")
 
     random_state = 42
 
-    # if training set...
     if training:
         # stratified sampling to reduce class imbalance
         n_classes = df['label'].nunique()
@@ -495,11 +489,7 @@ def data_description():
     - structure of dataset (e.g. how many rows and columns, datatypes)
     -
     """
-    #BEFORE
-    # can use preprocess_dir to loop through files
-    # get raw info from them (e.g. size, label counts?)
-    # add values all together for preprocessing
-    # LOOK TO REFERENCE CAPTURE24 ARTICLE FOR SOME OF THESE
+    # before preprocessing
     row_count = 0
     label_counts = {
         0: 0, # light
@@ -556,9 +546,7 @@ def data_description():
 
 
 
-    #AFTER
-    # create bar chart for class distribution (maybe use pcd from model analysis?)
-    # get raw info for final datasets (e.g. size, label counts, columns, datatypes)
+    # after preprocessing
     print("\n\nPreprocessed data info:")
     dataset_type = ["LLM-SS", "SS"]
     for type in dataset_type:

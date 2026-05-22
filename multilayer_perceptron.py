@@ -69,12 +69,9 @@ def fine_tuning(x_train, y_train):
         'alpha': [0.0001, 0.001, 0.005]
     }]
 
-    # five-fold - use StratifiedKFold to avoid imbalanced class distribution
     ff = StratifiedKFold(n_splits=5, shuffle=True, random_state=41)
 
     grid_search = GridSearchCV(mlp, param_grid, cv=ff, scoring='accuracy', refit=True, n_jobs=-1, verbose=3)
-    # n_jobs = -1 : run on all available cores
-    # verbose = 2 : gives update each time fold finishes
 
     grid_search.fit(x_train, y_train)
 
@@ -109,15 +106,7 @@ def assess_model(x_train, x_test, y_train, y_test):
         Returns:
             None
         """
-    """
-    1. get best model params
-    2. feed them into model
-    3. train model
-    4. test model
-    5. record performance
-    """
     print("\nAssessing MLP model...")
-
 
     # get best params
     dir = f"results\\mlp_fine_tune_results.csv"
@@ -125,7 +114,7 @@ def assess_model(x_train, x_test, y_train, y_test):
     optimal_params = df[['param_activation', 'param_hidden_layer_sizes', 'param_alpha']].iloc[0]
     params = optimal_params.to_list()
 
-    import ast  # https://www.geeksforgeeks.org/python/difference-between-eval-and-ast-literal-eval-in-python/
+    import ast
     params[1] = ast.literal_eval(params[1])  # convert hidden_layer_sizes from string back into tuple
 
 

@@ -2,7 +2,6 @@ import json
 from collections import Counter
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
@@ -107,7 +106,6 @@ def class_comparison(cr, model_type):
         Returns:
             None
         """
-    # per-class precision, recall, f1-score bar chart
     # 2x2 grid
 
     labels = ["light", "moderate-vigorous", "sedentary", "sleep"]
@@ -149,10 +147,9 @@ def predict_class_distribution(y_pred, model_type):
         Returns:
             None
         """
-    # bar chart of predicted label distribution
     label_remap = remap_labels(y_pred, "encode_to_label")
 
-    label_counts = Counter(label_remap) # Counter({'sleep': 7111, 'sedentary': 6263, 'light': 5103, 'moderate-vigorous': 1523})
+    label_counts = Counter(label_remap)
 
     print(label_counts)
 
@@ -178,7 +175,6 @@ def model_accuracy_analysis():
         Returns:
             None
         """
-    # create graph of fine tune results/comparison
     path = r"results/model_results.json"
     with open(path, "r") as file:
         model_rs = json.load(file)

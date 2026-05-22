@@ -1,15 +1,12 @@
 # pip install -U "huggingface_hub"
-import json
 import pickle
 
 import numpy as np
 # hf auth login
 # pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-import pandas as pd
-import re
+
 
 import torch
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
 
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig # pip install torch transformers accelerate bitsandbytes
@@ -314,6 +311,7 @@ def rf_cot(x_test, y_test):
         else:
             # low confidence, consult LLM with CoT
             count +=1
+            print(f"Count: {count}")
             features = x_test.iloc[i]
             final_label = cot(features, pred_label, confidence)
             print(f"actual label: {y_test[i]}\nrf label: {pred_label}\nllm label: {final_label}")
@@ -482,7 +480,7 @@ def cot(x_test, pred_label, confidence):
     print(response)
 
     # extract final label
-    final_label = extract_label_cot(response)
+    final_label = extract_label_cot(response, pred_label_unencoded[0])
     print(f"Extracted label: {final_label}")
 
     prediction = remap_labels([final_label], "label_to_encode")
@@ -502,7 +500,7 @@ def extract_label(response):
 
     return "N/A"
 
-def extract_label_cot(response):
+def extract_label_cot(response, ml_prediction):
     if "Answer:" in response:
         response = response.split("Answer:")[-1]
 
@@ -516,7 +514,7 @@ def extract_label_cot(response):
             last_pos = pos
             last_label = label
 
-    return last_label if last_label else "N/A"
+    return last_label if last_label else ml_prediction
 
 
 def sample_training_data(x_train, y_train):

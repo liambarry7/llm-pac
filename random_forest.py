@@ -115,13 +115,6 @@ def assess_model(x_train, x_test, y_train, y_test):
         Returns:
             None
         """
-    """
-    1. get best model params
-    2. feed them into model
-    3. train model
-    4. test model
-    5. record performance
-    """
     print("\nAssessing Random Forest model...")
 
     # get best params

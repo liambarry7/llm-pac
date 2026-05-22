@@ -61,21 +61,18 @@ def fine_tuning(x_train, y_train):
         """
     print("\nFine-tuning kNN model...")
 
-    # create new mlp
+    # create new knn
     knn = KNeighborsClassifier()
 
     param_grid = [{
         'n_neighbors': [1, 3, 5, 7],
         'metric': ['euclidean', 'manhattan', 'minkowski'],
-        'leaf_size': [20, 30, 40] # does not affect accuracy, only speed and memory usage
+        'leaf_size': [20, 30, 40]
     }]
 
-    # five-fold - use StratifiedKFold to avoid imbalanced class distribution
     ff = StratifiedKFold(n_splits=5, shuffle=True, random_state=41)
 
     grid_search = GridSearchCV(knn, param_grid, cv=ff, scoring='accuracy', refit=True, n_jobs=-1, verbose=3)
-    # n_jobs = -1 : run on all available cores
-    # verbose = 2 : gives update each time fold finishes
 
     grid_search.fit(x_train, y_train)
 
@@ -111,15 +108,7 @@ def assess_model(x_train, x_test, y_train, y_test):
         Returns:
             None
         """
-    """
-    1. get best model params
-    2. feed them into model
-    3. train model
-    4. test model
-    5. record performance
-    """
     print("\nAssessing kNN model...")
-
 
     # get best params
     dir = f"results\\knn_fine_tune_results.csv"

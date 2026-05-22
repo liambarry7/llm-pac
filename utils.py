@@ -12,7 +12,7 @@ def remap_labels(label_list, direction):
         Returns:
             List: list of remapped labels
         """
-    # --- New label mapping ---
+    # --- label mapping ---
     annotation_label_dir = r"data\annotation-label-encoded.csv"
     label_df = pd.read_csv(annotation_label_dir)
 
