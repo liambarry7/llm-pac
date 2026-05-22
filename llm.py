@@ -32,6 +32,15 @@ run_lim = 10000000
 
 
 def test_llm():
+    """
+        A function to test LLM is installed and setup properly, and response to a prompt.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
     input_text = "Write me a poem about Physical Activity Classification."
     input_ids = tokenizer(input_text, return_tensors="pt").to("cuda")
 
@@ -46,7 +55,17 @@ def test_llm():
 
 
 def zero_shot_prompting(x_test, y_test):
+    """
+        Assess zero-shot prompting strategy on LLM. Record performance metrics on test set, and create
+        supporting graphs for analysis.
 
+        Args:
+            x_test (pandas.Dataframe): Dataframe containing testing data.
+            y_test (pandas.Series): Series containing training labels.
+
+        Returns:
+            None
+        """
     y_unencoded = remap_labels(y_test, "encode_to_label")
     pred_labels = []
 
@@ -102,11 +121,6 @@ def zero_shot_prompting(x_test, y_test):
     recall = recall_score(y_test[:len(pred_labels_encoded)], pred_labels_encoded, average="weighted")
     f1 = f1_score(y_test[:len(pred_labels_encoded)], pred_labels_encoded, average="weighted")
 
-    # acc = accuracy_score(y_test, pred_labels_encoded)
-    # prec = precision_score(y_test, pred_labels_encoded, average="weighted")
-    # recall = recall_score(y_test, pred_labels_encoded, average="weighted")
-    # f1 = f1_score(y_test, pred_labels_encoded, average="weighted")
-
     print(f"Accuracy: {acc * 100:.2f}%")
     print(f"Precision: {prec * 100:.2f}%")
     print(f"Recall: {recall * 100:.2f}%")
@@ -125,14 +139,19 @@ def zero_shot_prompting(x_test, y_test):
     class_comparison(class_report, model_type)
     predict_class_distribution(pred_labels_encoded, model_type)
 
-    # generate_cm(y_test, pred_labels_encoded, model_type)
-    # metric_comparison(model_data, model_type)
-    # class_report = classification_report(y_test, pred_labels_encoded, target_names=["light", "moderate-vigorous", "sedentary", "sleep"], output_dict=True)
-    # class_comparison(class_report, model_type)
-    # predict_class_distribution(pred_labels_encoded, model_type)
-
 
 def few_shot_prompting(x_train, y_train, x_test, y_test):
+    """
+        Assess few-shot prompting strategy on LLM. Record performance metrics on test set, and create
+        supporting graphs for analysis.
+
+        Args:
+            x_test (pandas.Dataframe): Dataframe containing testing data.
+            y_test (pandas.Series): Series containing training labels.
+
+        Returns:
+            None
+        """
     y_unencoded = remap_labels(y_test, "encode_to_label")
     pred_labels = []
 
@@ -141,7 +160,7 @@ def few_shot_prompting(x_train, y_train, x_test, y_test):
         sample_df = sample_training_data(x_train, y_train)
         sample_y = remap_labels(sample_df['encoded_label'], "encode_to_label")
 
-        zero_shot_template = f"""
+        few_shot_template = f"""
                     You are a physical activity classifier.
 
                     Predict the activity label from wrist accelerometer features.
@@ -209,7 +228,7 @@ def few_shot_prompting(x_train, y_train, x_test, y_test):
                     Answer:
                 """
 
-        input_ids = tokenizer(zero_shot_template, return_tensors="pt").to("cuda")
+        input_ids = tokenizer(few_shot_template, return_tensors="pt").to("cuda")
 
         outputs = model.generate(**input_ids,
                                  max_new_tokens=10,
@@ -252,12 +271,6 @@ def few_shot_prompting(x_train, y_train, x_test, y_test):
     class_comparison(class_report, model_type)
     predict_class_distribution(pred_labels_encoded, model_type)
 
-    # generate_cm(y_test, pred_labels_encoded, model_type)
-    # metric_comparison(model_data, model_type)
-    # class_report = classification_report(y_test, pred_labels_encoded, target_names=["light", "moderate-vigorous", "sedentary", "sleep"], output_dict=True)
-    # class_comparison(class_report, model_type)
-    # predict_class_distribution(pred_labels_encoded, model_type)
-
 
 def rf_cot(x_test, y_test):
     """
@@ -294,11 +307,6 @@ def rf_cot(x_test, y_test):
 
         total_rf_preds.append(pred_label) # record all rf predictions
 
-        # print(f"\nsample_pred: {sample_pred}")
-        # print(f"pred_id: {pred_id}")
-        # print(f"Confidence: {confidence}")
-        # print(f"Pred label: {pred_label}")
-
         # get margin between top 2 predictions
         sorted_confidences = np.sort(sample_pred)
         first = sorted_confidences[-1]
@@ -328,7 +336,7 @@ def rf_cot(x_test, y_test):
     print(f"Mean confidence: {np.mean(confidences)}")
     print(f"Min confidence: {np.min(confidences)}")
     print(f"Max confidence: {np.max(confidences)}")
-    print(f"No of low confidence: {count}/{len(x_test)}") # 892/5000 - 5hrs
+    print(f"No of low confidence: {count}/{len(x_test)}")
 
 
     # Full model results
@@ -431,39 +439,39 @@ def cot(x_test, pred_label, confidence):
     pred_label_unencoded = remap_labels([pred_label], "encode_to_label")
 
     cot_template = f"""
-                        You are an expert in physical activity classification.
-                        Review the following accelerometer feature set, compare it to interpretation guide and
-                        Determine whether a previous ML classifier correctly classified this data.
-                        If incorrect, provide a better label.
+        You are an expert in physical activity classification.
+        Review the following accelerometer feature set, compare it to interpretation guide and
+        Determine whether a previous ML classifier correctly classified this data.
+        If incorrect, provide a better label.
 
-                        Feature interpretation guide:
-                        - High std/rms/jerk = movement present. Low values = stillness.
-                        - sleep: near-zero std, jerk, and rms on all axes. Low dominant frequency.
-                        - sedentary: very low movement, some postural shifts. Low jerk.
-                        - light: moderate std and rms. Some rhythmic pattern in dominant frequency.
-                        - moderate-vigorous: high std, rms, jerk across axes. Elevated dominant frequency.
+        Feature interpretation guide:
+        - High std/rms/jerk = movement present. Low values = stillness.
+        - sleep: near-zero std, jerk, and rms on all axes. Low dominant frequency.
+        - sedentary: very low movement, some postural shifts. Low jerk.
+        - light: moderate std and rms. Some rhythmic pattern in dominant frequency.
+        - moderate-vigorous: high std, rms, jerk across axes. Elevated dominant frequency.
 
-                        Possible labels:
-                        light, moderate-vigorous, sedentary, sleep
+        Possible labels:
+        light, moderate-vigorous, sedentary, sleep
 
-                        Features:
-                        x-mean = {x_test['x_mean']:.2f}, y-mean = {x_test['y_mean']:.2f}, z-mean = {x_test['z_mean']:.2f}
-                        x-std = {x_test['x_std']:.2f}, y-std = {x_test['y_std']:.2f}, z-std = {x_test['z_std']:.2f}
-                        x-min = {x_test['x_min']:.2f}, y-min = {x_test['y_min']:.2f}, z-min = {x_test['z_min']:.2f}
-                        x-max = {x_test['x_max']:.2f}, y-max = {x_test['y_max']:.2f}, z-max = {x_test['z_max']:.2f}
-                        magnitude-mean = {x_test['magnitude_mean']:.2f}, magnitude-std = {x_test['magnitude_std']:.2f}
-                        rms = {x_test['rms']:.2f}, jerk = {x_test['jerk']:.2f}, dominant frequency = {x_test['dominant_freq']:.2f}
+        Features:
+        x-mean = {x_test['x_mean']:.2f}, y-mean = {x_test['y_mean']:.2f}, z-mean = {x_test['z_mean']:.2f}
+        x-std = {x_test['x_std']:.2f}, y-std = {x_test['y_std']:.2f}, z-std = {x_test['z_std']:.2f}
+        x-min = {x_test['x_min']:.2f}, y-min = {x_test['y_min']:.2f}, z-min = {x_test['z_min']:.2f}
+        x-max = {x_test['x_max']:.2f}, y-max = {x_test['y_max']:.2f}, z-max = {x_test['z_max']:.2f}
+        magnitude-mean = {x_test['magnitude_mean']:.2f}, magnitude-std = {x_test['magnitude_std']:.2f}
+        rms = {x_test['rms']:.2f}, jerk = {x_test['jerk']:.2f}, dominant frequency = {x_test['dominant_freq']:.2f}
 
-                        The ML Classifier predicted '{pred_label_unencoded[0]}' with {confidence}, but the margin to the next class was too close.
+        The ML Classifier predicted '{pred_label_unencoded[0]}' with {confidence}, but the margin to the next class was too close.
 
-                        This sample was considered unreasonable because the confidence between top predicted classes was too close.
-                        You must still choose the best activity label.
+        This sample was considered unreasonable because the confidence between top predicted classes was too close.
+        You must still choose the best activity label.
 
-                        Think step by step, then respond in EXACTLY this format:
+        Think step by step, then respond in EXACTLY this format:
 
-                        Reasoning: <step-by-step logic here>
-                        Final Answer: <one of: light, moderate-vigorous, sedentary, sleep>
-                    """
+        Reasoning: <step-by-step logic here>
+        Final Answer: <one of: light, moderate-vigorous, sedentary, sleep>
+    """
 
     # print(cot_template)
     input_ids = tokenizer(cot_template, return_tensors="pt").to("cuda")
@@ -488,6 +496,15 @@ def cot(x_test, pred_label, confidence):
 
 
 def extract_label(response):
+    """
+        Extract the activity label from zero-shot and few-shot prompting strategies.
+
+        Args:
+            response (String): Textual response generated by LLM from prompt
+
+        Returns:
+            label (String): returns the final activity label from llm response
+        """
     if "Answer:" in response:
         response = response.split("Answer:")[-1]
 
@@ -501,6 +518,17 @@ def extract_label(response):
     return "N/A"
 
 def extract_label_cot(response, ml_prediction):
+    """
+        Extract the activity label from CoT prompting strategy.
+
+        Args:
+            response (String): Textual response generated by LLM from prompt
+            ml_prediction (String): original activity classified by ml classifier
+
+        Returns:
+            last_label (String): returns the final activity label from llm response
+            ml_prediction (String): returns the ml_prediction if no label found
+        """
     if "Answer:" in response:
         response = response.split("Answer:")[-1]
 
@@ -514,11 +542,22 @@ def extract_label_cot(response, ml_prediction):
             last_pos = pos
             last_label = label
 
+    # return orgininal ml prediction as a fallback if no final activity can be found in response
     return last_label if last_label else ml_prediction
 
 
 def sample_training_data(x_train, y_train):
-    # take a random sample for each label for few shot prompting
+    """
+        Take a random sample from training dataset to be used as examples in
+        few-shot prompting
+
+        Args:
+            x_train (pandas.DataFrame): Dataframe containing training data.
+            y_train (pandas.Series): Series containing training labels.
+
+        Returns:
+            sample_df (pandas.DataFrame): returns a dataframe of 4 randomly samples class examples
+        """
 
     df = x_train.copy()
     df['encoded_label'] = y_train

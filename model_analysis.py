@@ -202,30 +202,5 @@ def model_accuracy_analysis():
     plt.show()
 
 
-# def fine_tune_results(file):
-    # create scatter graph of model results
-    # models = ["knn", "mlp", "rf", "xgb"]
-    # colours = ["green", "red", "blue", "purple"]
-    #
-    # for idx, model in enumerate(models):
-    # # for model in models:
-    #     df = pd.read_csv(f"results\\{model}_fine_tune_results.csv")
-    #     x_values = df['mean_test_score']
-    #     y_values = df['std_test_score']
-    #     plt.scatter(x_values, y_values, colour=colours[idx], label=model)
-    #
-    #     # mean_test_score, std_test_score
-    #
-    # plt.xlabel('Model Mean Accuracy Score')
-    # plt.ylabel('Model STD Accuracy Score')
-    # plt.title('All DT, MLP & kNN Models Mean Accuracy Comparison')
-    # plt.legend(['DT', 'MLP', 'kNN', 'Base DT', 'Base MLP', 'Base kNN'])
-    # # plt.savefig("graphs/Models_mean_accuracy_comparison.png")
-    # plt.show()
-    # pass
-
-
-
 if __name__ == "__main__":
     model_accuracy_analysis()
-    # fine_tune_results()
