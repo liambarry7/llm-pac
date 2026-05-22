@@ -401,7 +401,7 @@ def rf_cot(x_test, y_test):
     full_rf_f1 = f1_score(y_test[:len(total_rf_preds)], total_rf_preds, average="weighted")
 
     model_type = "RF-LLM-FULL"
-    model_data = [rf_acc, rf_prec, rf_recall, rf_f1]
+    model_data = [full_rf_acc, full_rf_prec, full_rf_recall, full_rf_f1]
     save_results(model_type, "assess", model_data)
 
     generate_cm(y_test[:len(total_rf_preds)], total_rf_preds, model_type)
