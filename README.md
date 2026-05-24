@@ -1,6 +1,6 @@
 # Large Language Models (LLM) enabled Physical Activity Classification (PAC) using Wearable Devices
 
-Third Year Project for University of East Anglia.
+Third Year Project for the University of East Anglia.
 ## Overview
 This project aims to investigate the feasibility of using lightweight Large Language Models for
 physical activity classification using wearable sensor data by comparing performance to a set
@@ -40,7 +40,16 @@ Sensor data taken from the Capture24 dataset was segmented using a sliding windo
 - Label (mode)
 
 ## How to use the project
-Instructions on how to run code
+1. Download Capture24 dataset locally, extract CSV files and place in a local directory
+   2. Change relevant directory paths in feature_preprocessing.py to Capture24 location
+3. Run feature_preprocessing.py to create datasets for models
+4. Run each machine learning model to fine-tune and assess models
+   5. k_nearest_neighbours.py
+   5. random_forest.py
+   5. multilayer_perceptron.py
+   5. xg_boost.py
+6. run llm.py to assess prompt engineering
+7. analyse graphs in graphs folder for results
 
 
 
@@ -62,7 +71,12 @@ Additional requirements:
 - HuggingFace authorisation for Gemma-2b-it
 
 ## Results Summary
-small summary of results
+Overall, the findings of this project present that lightweight Large Language Models are not
+capable of physical activity classification through standalone prompting at this level. However,
+they still could offer valuable insights if fine-tuned to a relevant domain in a hybrid system like
+the Random Forest + Chain-of-Thought system, where a Large Language Model may be able
+to offer valuable explanations, arguments or interpretations of data to aid someone in
+completing a task or classifying data
 
 ## Author
 Developed by Liam Barry, 

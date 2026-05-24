@@ -570,20 +570,20 @@ def sample_training_data(x_train, y_train):
 
 
 if __name__ == "__main__":
-    # test_llm()
+    test_llm()
     # remap_labels([0,1,2,3], "encode_to_label")
+    # sample_training_data(x_train, y_train)
+
 
     x_train, x_test, y_train, y_test = get_llm_dataset()
 
-    # sample_training_data(x_train, y_train)
 
 
 
     rf_cot(x_test, y_test)
 
-    # DO NOT RUN AGAIN
-    # #zero_shot_prompting(x_test, y_test)
-    # #few_shot_prompting(x_train, y_train, x_test, y_test)
+    zero_shot_prompting(x_test, y_test)
+    few_shot_prompting(x_train, y_train, x_test, y_test)
 
 
 

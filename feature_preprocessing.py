@@ -575,18 +575,18 @@ def data_description():
 
 
 if __name__ == "__main__":
-    # label_annotation_mapping()
+    label_annotation_mapping()
 
     # preprocess data, split into training and test
-    # preprocess_dir(training_participants, "train")
-    # preprocess_dir(test_participants, "test")
+    preprocess_dir(training_participants, "train")
+    preprocess_dir(test_participants, "test")
 
     # combine individual preprocessed csvs
-    # combine_data("train")
-    # combine_data("test")
+    combine_data("train")
+    combine_data("test")
 
     # scale data (normalise)
-    # scale_and_sample_data()
-    # llm_sample_data()
+    scale_and_sample_data()
+    llm_sample_data()
 
     data_description()

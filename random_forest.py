@@ -195,13 +195,13 @@ def rf_llm_train(x_train, y_train):
 
 if __name__ == "__main__":
 
-    # x_train, x_test, y_train, y_test = get_feature_dataset()
+    x_train, x_test, y_train, y_test = get_feature_dataset()
 
-    # test_model_basic(x_train, x_test, y_train, y_test)
+    test_model_basic(x_train, x_test, y_train, y_test)
 
-    # fine_tuning(x_train, y_train)
+    fine_tuning(x_train, y_train)
 
-    # assess_model(x_train, x_test, y_train, y_test)
+    assess_model(x_train, x_test, y_train, y_test)
 
     x_train, x_test, y_train, y_test = get_llm_dataset()
     fine_tuning(x_train, y_train, "llm")
