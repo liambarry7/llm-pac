@@ -28,7 +28,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=config, device_map="cuda")
 
 run_lim = 10000000
-# run_lim = 10
+# run_lim = 3
 
 
 def test_llm():
@@ -570,7 +570,7 @@ def sample_training_data(x_train, y_train):
 
 
 if __name__ == "__main__":
-    test_llm()
+    # test_llm()
     # remap_labels([0,1,2,3], "encode_to_label")
     # sample_training_data(x_train, y_train)
 
@@ -580,10 +580,14 @@ if __name__ == "__main__":
 
 
 
+    print("-"*10 + "ZERO SHOT PROMPTING" + "-"*10)
+    zero_shot_prompting(x_test, y_test)
+    print("-"*10 + "Few SHOT PROMPTING" + "-"*10)
+    few_shot_prompting(x_train, y_train, x_test, y_test)
+    print("-"*10 + "RF+CoT PROMPTING" + "-"*10)
     rf_cot(x_test, y_test)
 
-    zero_shot_prompting(x_test, y_test)
-    few_shot_prompting(x_train, y_train, x_test, y_test)
+
 
 
 
